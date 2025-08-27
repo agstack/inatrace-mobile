@@ -38,6 +38,7 @@ import {
 import Selector from '@/components/common/Selector';
 import { FullWindowOverlay } from 'react-native-screens';
 import cn from '@/utils/cn';
+import Colors from '@/constants/Colors';
 
 export default function UserSettings() {
   const [company, setCompany] = useState<CompanyInfo | undefined>(undefined);
@@ -72,9 +73,9 @@ export default function UserSettings() {
       headerLeft: () => (
         <Pressable
           onPress={() => navigation.goBack()}
-          className="flex flex-row items-center justify-center mr-3"
+          className="flex flex-row justify-center items-center mr-3"
         >
-          <ChevronLeft className="text-Orange" />
+          <ChevronLeft color={Colors.orange} />
           <Text className="font-medium text-Orange text-[18px]">Back</Text>
         </Pressable>
       ),
@@ -115,7 +116,7 @@ export default function UserSettings() {
   };
 
   return (
-    <ScrollView className="h-full p-5 border-t bg-White border-t-LightGray">
+    <ScrollView className="p-5 h-full border-t bg-White border-t-LightGray">
       <Text className="text-[18px] font-medium">
         {i18n.t('userSettings.userInformation')}
       </Text>
@@ -126,7 +127,7 @@ export default function UserSettings() {
             onPress={() => handleLogOut()}
             className="flex flex-row items-center justify-center w-[50%] mt-5 px-5 py-3 rounded-md bg-Orange"
           >
-            <LogIn className="mr-2 text-White" size={20} />
+            <LogIn color={Colors.white} style={{ marginRight: 8 }} size={20} />
             <Text className="text-White font-semibold text-[16px]">
               {i18n.t('login.login')}
             </Text>
@@ -176,8 +177,8 @@ export default function UserSettings() {
           <Text className="text-[18px] font-medium mt-5">
             {i18n.t('userSettings.companyInformation')}
           </Text>
-          <View className="flex flex-row items-center justify-between w-full mt-3">
-            <View className="flex flex-row items-center justify-center w-20 h-20 border rounded-full border-LightGray">
+          <View className="flex flex-row justify-between items-center mt-3 w-full">
+            <View className="flex flex-row justify-center items-center w-20 h-20 rounded-full border border-LightGray">
               {company?.logo && (
                 <Image
                   source={{
@@ -187,7 +188,7 @@ export default function UserSettings() {
                 />
               )}
             </View>
-            <View className="flex flex-col items-start w-full ml-4">
+            <View className="flex flex-col items-start ml-4 w-full">
               <Text className="text-[16px]">
                 {i18n.t('userSettings.company')}
               </Text>
@@ -199,7 +200,7 @@ export default function UserSettings() {
                     onPress={handlePresentModalPress}
                   >
                     <Text className="text-[16px] w-[85%]">{company?.name}</Text>
-                    <ChevronDown className="text-black" />
+                    <ChevronDown color={Colors.black} />
                   </Pressable>
                   <BottomSheetModal
                     ref={bottomSheetRef}
@@ -235,7 +236,7 @@ export default function UserSettings() {
                 </>
               ) : (
                 <Pressable
-                  className="flex flex-row items-center justify-between h-12 px-2 mt-2 border rounded-md border-LightGray"
+                  className="flex flex-row justify-between items-center px-2 mt-2 h-12 rounded-md border border-LightGray"
                   style={{ width: Dimensions.get('window').width - 136 }}
                 >
                   <Text className="text-[16px] text-DarkGray">
@@ -250,12 +251,12 @@ export default function UserSettings() {
       <Text className="text-[18px] font-medium mt-5 mb-3">
         {i18n.t('userSettings.offlineMaps')}
       </Text>
-      <View className="flex flex-row items-center justify-between">
+      <View className="flex flex-row justify-between items-center">
         <Pressable
           onPress={() => router.push('/map-download')}
-          className="flex flex-row items-center justify-center w-full h-12 px-2 rounded-md bg-Orange"
+          className="flex flex-row justify-center items-center px-2 w-full h-12 rounded-md bg-Orange"
         >
-          <Map className="mr-2 text-White" size={20} />
+          <Map color={Colors.white} style={{ marginRight: 8 }} size={20} />
           <Text className="text-White font-semibold text-[16px]">
             {i18n.t('userSettings.offlineMapsSettings')}
           </Text>
@@ -265,7 +266,7 @@ export default function UserSettings() {
         {i18n.t('userSettings.language')}
       </Text>
       <LanguageSwitcher />
-      <View className="flex flex-row items-center justify-between mt-5 mb-16">
+      <View className="flex flex-row justify-between items-center mt-5 mb-16">
         <Pressable
           onPress={() => resetPassword()}
           className={cn(
@@ -282,7 +283,7 @@ export default function UserSettings() {
             onPress={() => handleLogOut()}
             className="flex flex-row items-center justify-center w-[40%] px-5 py-3 rounded-md bg-Orange"
           >
-            <LogOut className="mr-2 text-White" size={20} />
+            <LogOut color={Colors.white} style={{ marginRight: 8 }} size={20} />
             <Text className="text-White font-semibold text-[16px]">
               {i18n.t('userSettings.logOut')}
             </Text>

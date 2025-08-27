@@ -15,6 +15,7 @@ import { User } from '@/types/user';
 import { RequestParams } from '@/types/auth';
 import cn from '@/utils/cn';
 import { useSelectedFarmerState } from '@/state/state';
+import Colors from '@/constants/Colors';
 
 type PlotInto = {
   plotName: string;
@@ -180,9 +181,9 @@ export default function AddPlot() {
       headerLeft: () => (
         <Pressable
           onPress={() => navigation.goBack()}
-          className="flex flex-row items-center justify-center mr-3"
+          className="flex flex-row justify-center items-center mr-3"
         >
-          <ChevronLeft className="text-Orange" />
+          <ChevronLeft color={Colors.orange} />
           <Text className="font-medium text-Orange text-[18px]">Back</Text>
         </Pressable>
       ),
@@ -361,7 +362,7 @@ export default function AddPlot() {
       </View>
       <Pressable
         className={cn(
-          'flex flex-row items-center justify-center h-12 mx-5 mt-5 mb-10 rounded-md',
+          'flex flex-row justify-center items-center mx-5 mt-5 mb-10 h-12 rounded-md',
           loading ? 'bg-LightOrange' : 'bg-Orange'
         )}
         style={ShadowButtonStyle}

@@ -9,6 +9,7 @@ import { SessionProvider } from '@/context/AuthContext';
 import i18n from '@/locales/i18n';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import DocumentationModal from '@/components/documentation-modal/DocumentationModal';
+import '../global.css';
 
 export { ErrorBoundary } from 'expo-router';
 

@@ -4,6 +4,7 @@ import { useLocalSearchParams, useNavigation } from 'expo-router';
 import { ChevronLeft } from 'lucide-react-native';
 import { useEffect, useState } from 'react';
 import { View, Text, Pressable } from 'react-native';
+import Colors from '@/constants/Colors';
 
 export default function ViewPlots() {
   const navigation = useNavigation();
@@ -17,9 +18,9 @@ export default function ViewPlots() {
       headerLeft: () => (
         <Pressable
           onPress={() => navigation.goBack()}
-          className="flex flex-row items-center justify-center mr-3"
+          className="flex flex-row justify-center items-center mr-3"
         >
-          <ChevronLeft className="text-Orange" />
+          <ChevronLeft color={Colors.orange} />
           <Text className="font-medium text-Orange text-[18px]">Back</Text>
         </Pressable>
       ),

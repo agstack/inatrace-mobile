@@ -7,6 +7,7 @@ import FarmerInformationGuest from '@/components/farmers/info/FarmerInformationG
 import FarmerInformation from '@/components/farmers/info/FarmerInformation';
 import { useSelectedFarmerState } from '@/state/state';
 import cn from '@/utils/cn';
+import Colors from '@/constants/Colors';
 
 export default function FarmersInfo() {
   const { guestAccess } = useContext(AuthContext) as {
@@ -21,9 +22,9 @@ export default function FarmersInfo() {
       headerLeft: () => (
         <Pressable
           onPress={() => navigation.goBack()}
-          className="flex flex-row items-center justify-center mr-3"
+          className="flex flex-row justify-center items-center mr-3"
         >
-          <ChevronLeft className="text-Orange" />
+          <ChevronLeft color={Colors.orange} />
           <Text className="font-medium text-Orange text-[18px]">Back</Text>
         </Pressable>
       ),
@@ -37,7 +38,7 @@ export default function FarmersInfo() {
                   'rounded-full p-[6px]'
                 )}
               >
-                <User2 size={14} className="text-White" />
+                <User2 color={Colors.white} size={14} />
               </View>
             )}
           </Pressable>

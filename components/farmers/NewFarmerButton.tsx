@@ -1,3 +1,4 @@
+import Colors from '@/constants/Colors';
 import { ShadowButtonStyle } from '@/constants/Shadow';
 import i18n from '@/locales/i18n';
 import cn from '@/utils/cn';
@@ -13,10 +14,10 @@ export default function NewFarmerButton() {
           <View
             className={cn(
               pressed ? 'bg-Orange' : 'bg-Orange',
-              'flex flex-row m-5 p-3 items-center justify-center rounded-md'
+              'flex flex-row justify-center items-center p-3 m-5 rounded-md'
             )}
           >
-            <Plus className="text-White" />
+            <Plus color={Colors.white} />
             <View className="w-2" />
             <Text className="text-[16px] text-White font-semibold">
               {i18n.t('farmers.newFarmer')}

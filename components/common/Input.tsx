@@ -38,7 +38,7 @@ export const Input = (props: InputProps) => {
 
 export const InputPassword = (props: InputPasswordProps) => {
   return (
-    <View className="flex flex-row items-center justify-between w-full h-12 mt-1 border rounded-md border-LightGray">
+    <View className="flex flex-row justify-between items-center mt-1 w-full h-12 rounded-md border border-LightGray">
       <TextInput
         placeholder={props.placeholder}
         value={props.value}
@@ -50,11 +50,11 @@ export const InputPassword = (props: InputPasswordProps) => {
       <View className="mr-2" />
       {props.isPasswordVisible ? (
         <Pressable onPress={() => props.setIsPasswordVisible(false)}>
-          <Eye className="mr-3 text-LightGray" />
+          <Eye color={Colors.lightGray} style={{ marginRight: 12 }} />
         </Pressable>
       ) : (
         <Pressable onPress={() => props.setIsPasswordVisible(true)}>
-          <EyeOff className="mr-3 text-LightGray" />
+          <EyeOff color={Colors.lightGray} style={{ marginRight: 12 }} />
         </Pressable>
       )}
     </View>

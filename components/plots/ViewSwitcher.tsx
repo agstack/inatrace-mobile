@@ -1,3 +1,4 @@
+import Colors from '@/constants/Colors';
 import i18n from '@/locales/i18n';
 import cn from '@/utils/cn';
 import { Map, Scroll } from 'lucide-react-native';
@@ -50,10 +51,8 @@ export default function ViewSwitcher({
         }}
       >
         <Scroll
-          className={cn(
-            viewType === 'list' ? 'text-White' : 'text-black',
-            'mr-2'
-          )}
+          color={viewType === 'list' ? Colors.white : Colors.black}
+          style={{ marginRight: 8 }}
         />
         <Text
           className={cn(
@@ -84,10 +83,8 @@ export default function ViewSwitcher({
         }}
       >
         <Map
-          className={cn(
-            viewType === 'map' ? 'text-White' : 'text-black',
-            'mr-2'
-          )}
+          color={viewType === 'map' ? Colors.white : Colors.black}
+          style={{ marginRight: 8 }}
         />
         <Text
           className={cn(

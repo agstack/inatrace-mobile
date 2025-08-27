@@ -98,8 +98,8 @@ export default function Card({
   return (
     <ScrollView className={cn('flex flex-col m-5', limitScreen && 'h-[50%]')}>
       {synced === false && (
-        <View className="flex flex-row items-center justify-start mb-1">
-          <AlertCircle className="mr-1 text-purple-300" size={14} />
+        <View className="flex flex-row justify-start items-center mb-1">
+          <AlertCircle color="#d8b4fe" style={{ marginRight: 8 }} size={14} />
           <Text className="text-purple-300">
             {i18n.t('synced.itemNotSynced')}
           </Text>
@@ -107,7 +107,7 @@ export default function Card({
       )}
       {title && (
         <Pressable
-          className="flex flex-row items-center justify-between p-4 bg-Green rounded-t-md"
+          className="flex flex-row justify-between items-center p-4 rounded-t-md bg-Green"
           onPress={() =>
             navigationPath
               ? navigateToDetails()
@@ -120,12 +120,12 @@ export default function Card({
           <Text className="text-White text-[18px] font-semibold">{title}</Text>
           {navigationPath && (
             <View>
-              <MoveDiagonal className="text-White" />
+              <MoveDiagonal color={Colors.white} />
             </View>
           )}
           {canClose && (
             <Pressable onPress={onClose}>
-              <X className="text-White" />
+              <X color={Colors.white} />
             </Pressable>
           )}
         </Pressable>
@@ -133,8 +133,8 @@ export default function Card({
       <View
         className={cn(
           title
-            ? 'border-x border-x-LightGray border-b border-b-LightGray rounded-b-md'
-            : 'border border-LightGray rounded-md',
+            ? 'rounded-b-md border-b border-x border-x-LightGray border-b-LightGray'
+            : 'rounded-md border border-LightGray',
           'bg-White'
         )}
       >
@@ -250,19 +250,19 @@ const ItemView = ({ item, isLast }: { item: ItemProps; isLast: boolean }) => {
         {item.share && item?.value && (
           <View className={cn('flex flex-col', !qrView && 'right-8')}>
             <Pressable
-              className="flex flex-row items-center justify-center w-8 h-8 mb-2 border rounded-md border-LightGray"
+              className="flex flex-row justify-center items-center mb-2 w-8 h-8 rounded-md border border-LightGray"
               onPress={() => (qrView ? onShareQR() : onShare(item.value ?? ''))}
             >
-              <Share2 className="text-black" size={18} />
+              <Share2 color={Colors.black} size={18} />
             </Pressable>
             <Pressable
-              className="flex flex-row items-center justify-center w-8 h-8 border rounded-md border-LightGray"
+              className="flex flex-row justify-center items-center w-8 h-8 rounded-md border border-LightGray"
               onPress={() => setQrView(!qrView)}
             >
               {!qrView ? (
-                <QrCode className="text-black" size={18} />
+                <QrCode color={Colors.black} size={18} />
               ) : (
-                <LucideText className="text-black" size={18} />
+                <LucideText color={Colors.black} size={18} />
               )}
             </Pressable>
           </View>
@@ -346,10 +346,8 @@ const ItemSelect = ({ item, isLast }: { item: ItemProps; isLast: boolean }) => {
             {selected ? selected.label : item.placeholder}
           </Text>
           <ChevronDown
-            className={cn(
-              'ml-1',
-              item.error ? 'text-red-500' : 'text-DarkGray'
-            )}
+            color={item.error ? Colors.red : Colors.darkGray}
+            style={{ marginLeft: 8 }}
           />
         </Pressable>
       </View>
@@ -372,8 +370,11 @@ const ItemSelect = ({ item, isLast }: { item: ItemProps; isLast: boolean }) => {
       >
         <BottomSheetScrollView className="rounded-t-md">
           {item.selectWithSearch && (
-            <View className="relative flex flex-row items-center justify-between h-12 mx-5 mt-1 border rounded-md border-LightGray bg-White">
-              <Search className="absolute text-LightGray left-4" />
+            <View className="flex relative flex-row justify-between items-center mx-5 mt-1 h-12 rounded-md border border-LightGray bg-White">
+              <Search
+                color={Colors.lightGray}
+                style={{ position: 'absolute', left: 8 }}
+              />
               <TextInput
                 placeholder={i18n.t('farmers.search')}
                 value={search}
@@ -431,14 +432,14 @@ const ItemCheckbox = ({
       <Text className="text-[16px] mr-3 max-w-[45%]">{item.name}</Text>
       {item.value === i18n.t('yes') ? (
         <Pressable
-          className="flex flex-row items-center justify-center w-6 h-6 border rounded-md border-LightGray"
+          className="flex flex-row justify-center items-center w-6 h-6 rounded-md border border-LightGray"
           onPress={() => item.setValue!(i18n.t('no'))}
         >
-          <Check className="text-black" size={18} />
+          <Check color={Colors.black} size={18} />
         </Pressable>
       ) : (
         <Pressable
-          className="flex flex-row items-center justify-center w-6 h-6 border rounded-md border-LightGray"
+          className="flex flex-row justify-center items-center w-6 h-6 rounded-md border border-LightGray"
           onPress={() => item.setValue!(i18n.t('yes'))}
         ></Pressable>
       )}

@@ -1,11 +1,4 @@
-import {
-  ActivityIndicator,
-  Alert,
-  Pressable,
-  Text,
-  View,
-  Linking,
-} from 'react-native';
+import { ActivityIndicator, Alert, Pressable, Text, View } from 'react-native';
 import Clipboard from '@react-native-clipboard/clipboard';
 import Share from 'react-native-share';
 import RNFS from 'react-native-fs';
@@ -25,6 +18,7 @@ import { RequestParams } from '@/types/auth';
 import cn from '@/utils/cn';
 import { FileUp } from 'lucide-react-native';
 import { useSelectedFarmerState } from '@/state/state';
+import Colors from '@/constants/Colors';
 
 type SummaryData = {
   crop: string;
@@ -439,15 +433,15 @@ export default function ListView({
         </View>
       )}
       {data.length > 0 && (
-        <View className="flex flex-row items-center justify-between mx-5">
+        <View className="flex flex-row justify-between items-center mx-5">
           <Text className="text-[18px] font-medium my-2">
             {i18n.t('plots.plotsTitle')}
           </Text>
           <Pressable
             onPress={exportPlots}
-            className="flex flex-row items-center justify-center px-5 py-2 rounded-md bg-Orange"
+            className="flex flex-row justify-center items-center px-5 py-2 rounded-md bg-Orange"
           >
-            <FileUp className="mr-2 text-White" />
+            <FileUp color={Colors.white} style={{ marginRight: 8 }} />
             <Text className="text-[16px] text-White font-semibold">
               {i18n.t('plots.export')}
             </Text>

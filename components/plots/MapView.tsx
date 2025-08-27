@@ -33,7 +33,7 @@ import { uuid } from 'expo-modules-core';
 import { FeatureInfo, Plot } from '@/types/plot';
 import realm from '@/realm/useRealm';
 import { PlotSchema } from '@/realm/schemas';
-import { Farmer, ProductTypeWithCompanyId } from '@/types/farmer';
+import { ProductTypeWithCompanyId } from '@/types/farmer';
 import { User } from '@/types/user';
 import Card, { CardProps } from '../common/Card';
 import * as turf from '@turf/turf';
@@ -616,7 +616,7 @@ export default function MapView({
             style={{
               height: Dimensions.get('window').height - 200,
             }}
-            className="absolute flex flex-col items-center justify-center w-full"
+            className="flex absolute flex-col justify-center items-center w-full"
           >
             <ActivityIndicator size="large" animating={isMapLoading} />
             <Text className="mt-2">{i18n.t('plots.mapLoading')}</Text>
@@ -652,9 +652,10 @@ export default function MapView({
                   draggable
                   onDragEnd={handleDragEnd}
                 >
-                  <View className="relative flex flex-row items-center justify-center w-12 h-12 rounded-full bg-White/50">
+                  <View className="flex relative flex-row justify-center items-center w-12 h-12 rounded-full bg-White/50">
                     <LocateFixed
-                      className="rounded-full text-Orange"
+                      color={Colors.orange}
+                      style={{ borderRadius: 999 }}
                       size={32}
                     />
                   </View>
@@ -668,7 +669,7 @@ export default function MapView({
                   id="current-location"
                   key={location.timestamp.toString()}
                 >
-                  <View className="relative flex flex-row items-center justify-center w-5 h-5 bg-white rounded-full">
+                  <View className="flex relative flex-row justify-center items-center w-5 h-5 bg-white rounded-full">
                     <View className="w-4 h-4 bg-blue-500 rounded-full" />
                   </View>
                 </Mapbox.PointAnnotation>
@@ -682,7 +683,7 @@ export default function MapView({
                 id="current-location"
                 key={location.timestamp.toString()}
               >
-                <View className="relative flex flex-row items-center justify-center w-5 h-5 bg-white rounded-full">
+                <View className="flex relative flex-row justify-center items-center w-5 h-5 bg-white rounded-full">
                   <View className="w-4 h-4 bg-blue-500 rounded-full" />
                 </View>
               </Mapbox.PointAnnotation>
@@ -765,10 +766,14 @@ export default function MapView({
             >
               {location.coords.accuracy < 10 ? (
                 <View
-                  className="flex flex-row items-center self-start justify-start"
+                  className="flex flex-row justify-start items-center self-start"
                   key={location.coords.accuracy}
                 >
-                  <LocateFixed className="mr-2 text-Green" size={20} />
+                  <LocateFixed
+                    color={Colors.green}
+                    style={{ marginRight: 8 }}
+                    size={20}
+                  />
                   <Text className="text-Green">
                     {i18n.t('plots.addPlot.highGPSAccuracy', {
                       accuracy: Math.round(location.coords.accuracy),
@@ -777,10 +782,14 @@ export default function MapView({
                 </View>
               ) : location.coords.accuracy < 30 ? (
                 <View
-                  className="flex flex-row items-center justify-start"
+                  className="flex flex-row justify-start items-center"
                   key={location.coords.accuracy}
                 >
-                  <LocateFixed className="mr-2 text-Orange" size={20} />
+                  <LocateFixed
+                    color={Colors.orange}
+                    style={{ marginRight: 8 }}
+                    size={20}
+                  />
                   <Text className="text-Orange">
                     {i18n.t('plots.addPlot.mediumGPSAccuracy', {
                       accuracy: Math.round(location.coords.accuracy),
@@ -789,10 +798,14 @@ export default function MapView({
                 </View>
               ) : (
                 <View
-                  className="flex flex-row items-center justify-start"
+                  className="flex flex-row justify-start items-center"
                   key={location.coords.accuracy}
                 >
-                  <LocateFixed className="mr-2 text-red-500" size={20} />
+                  <LocateFixed
+                    color={Colors.red}
+                    style={{ marginRight: 8 }}
+                    size={20}
+                  />
                   <Text className="text-red-500">
                     {i18n.t('plots.addPlot.lowGPSAccuracy', {
                       accuracy: Math.round(location.coords.accuracy),
@@ -802,23 +815,23 @@ export default function MapView({
               )}
             </View>
           )}
-          <View className="absolute bottom-0 flex flex-col w-full">
-            <View className="flex flex-row items-center justify-between mx-5">
+          <View className="flex absolute bottom-0 flex-col w-full">
+            <View className="flex flex-row justify-between items-center mx-5">
               <View className="flex flex-row items-center">
                 {/* Undo */}
                 <Pressable
-                  className="flex flex-row items-center justify-center px-3 py-2 mr-2 rounded-md bg-White"
+                  className="flex flex-row justify-center items-center px-3 py-2 mr-2 rounded-md bg-White"
                   style={style.shadowMedium}
                   disabled={locationsForFeature.length === 0}
                   onPress={undo}
                 >
                   <Undo2
-                    className={cn(
-                      'mr-2',
+                    color={
                       locationsForFeature.length === 0
-                        ? 'text-DarkGray'
-                        : 'text-black'
-                    )}
+                        ? Colors.darkGray
+                        : Colors.black
+                    }
+                    style={{ marginRight: 8 }}
                     size={20}
                   />
                   <Text
@@ -834,7 +847,7 @@ export default function MapView({
                 </Pressable>
                 {/* Redo */}
                 <Pressable
-                  className="flex flex-row items-center justify-center px-3 py-2 rounded-md bg-White"
+                  className="flex flex-row justify-center items-center px-3 py-2 rounded-md bg-White"
                   style={style.shadowMedium}
                   disabled={locationsForFeatureCache.length === 0}
                   onPress={redo}
@@ -850,12 +863,12 @@ export default function MapView({
                     {i18n.t('plots.addPlot.redo')}
                   </Text>
                   <Redo2
-                    className={cn(
-                      'ml-2',
+                    color={
                       locationsForFeatureCache.length === 0
-                        ? 'text-DarkGray'
-                        : 'text-black'
-                    )}
+                        ? Colors.darkGray
+                        : Colors.black
+                    }
+                    style={{ marginLeft: 8 }}
                     size={20}
                   />
                 </Pressable>
@@ -863,28 +876,28 @@ export default function MapView({
               {/* Location button */}
               <View className="flex flex-row items-center self-end">
                 <Pressable
-                  className="flex flex-row items-center justify-center w-16 h-16 mb-5 mr-2 border-2 border-blue-500 rounded-full bg-White"
+                  className="flex flex-row justify-center items-center mr-2 mb-5 w-16 h-16 rounded-full border-2 border-blue-500 bg-White"
                   onPress={() => fitCameraToCentroids()}
                   style={style.shadowMedium}
                 >
-                  <MapPinned className="text-blue-500" size={30} />
+                  <MapPinned color="#3b82f6" size={30} />
                 </Pressable>
                 <Pressable
-                  className="flex flex-row items-center justify-center w-16 h-16 mb-5 border-2 border-blue-500 rounded-full bg-White"
+                  className="flex flex-row justify-center items-center mb-5 w-16 h-16 rounded-full border-2 border-blue-500 bg-White"
                   onPress={() => focusOnLocation()}
                   style={style.shadowMedium}
                 >
-                  <Navigation className="text-blue-500" size={30} />
+                  <Navigation color="#3b82f6" size={30} />
                 </Pressable>
               </View>
             </View>
-            <View className="w-full p-5 pb-10 bg-White rounded-t-md">
+            <View className="p-5 pb-10 w-full rounded-t-md bg-White">
               {/* Add location button */}
               {manualMode ? (
-                <View className="flex flex-row items-center justify-center mt-2">
+                <View className="flex flex-row justify-center items-center mt-2">
                   <Pressable
                     onPress={() => setManualMode(!manualMode)}
-                    className="flex flex-row items-center justify-center flex-grow px-5 py-3 mr-2 border rounded-md bg-White border-LightGray"
+                    className="flex flex-row flex-grow justify-center items-center px-5 py-3 mr-2 rounded-md border bg-White border-LightGray"
                   >
                     <Text className="text-black/60 font-semibold text-[16px]">
                       {i18n.t('plots.addPlot.cancel')}
@@ -892,7 +905,7 @@ export default function MapView({
                   </Pressable>
                   <Pressable
                     onPress={addManualLocation}
-                    className="flex flex-row items-center justify-center flex-grow px-5 py-3 rounded-md bg-Orange"
+                    className="flex flex-row flex-grow justify-center items-center px-5 py-3 rounded-md bg-Orange"
                   >
                     <Text className="text-White font-semibold text-[16px]">
                       {i18n.t('plots.addPlot.confirm')}
@@ -915,7 +928,11 @@ export default function MapView({
                       location?.coords.accuracy > 10
                     }
                   >
-                    <MapPin className="mr-2 text-White" size={20} />
+                    <MapPin
+                      color={Colors.white}
+                      style={{ marginRight: 8 }}
+                      size={20}
+                    />
                     <Text className="text-White font-semibold text-[16px]">
                       {i18n.t('plots.addPlot.addCurrentLocation')}
                     </Text>
@@ -925,19 +942,23 @@ export default function MapView({
                   location?.coords.accuracy > 10 ? (
                     <Pressable
                       onPress={() => setManualMode(!manualMode)}
-                      className="flex flex-row items-center justify-center px-5 py-3 mt-2 rounded-md bg-Orange"
+                      className="flex flex-row justify-center items-center px-5 py-3 mt-2 rounded-md bg-Orange"
                     >
-                      <MapPin className="mr-2 text-White" size={20} />
+                      <MapPin
+                        color={Colors.white}
+                        style={{ marginRight: 8 }}
+                        size={20}
+                      />
                       <Text className="text-White font-semibold text-[16px]">
                         {i18n.t('plots.addPlot.toggleManual')}
                       </Text>
                     </Pressable>
                   ) : null}
 
-                  <View className="flex flex-row items-center justify-center mt-2">
+                  <View className="flex flex-row justify-center items-center mt-2">
                     <Pressable
                       onPress={cancelNewPlot}
-                      className="flex flex-row items-center justify-center flex-grow px-5 py-3 mr-2 border rounded-md bg-White border-LightGray"
+                      className="flex flex-row flex-grow justify-center items-center px-5 py-3 mr-2 rounded-md border bg-White border-LightGray"
                     >
                       <Text className="text-black/60 font-semibold text-[16px]">
                         {i18n.t('plots.addPlot.cancel')}
@@ -971,7 +992,7 @@ export default function MapView({
         </View>
       ) : (
         <View
-          className="flex flex-col justify-between h-full p-5"
+          className="flex flex-col justify-between p-5 h-full"
           pointerEvents="box-none"
         >
           {type === 'new' ? (
@@ -988,18 +1009,18 @@ export default function MapView({
             {/* Location button */}
             <View className="flex flex-row items-center self-end">
               <Pressable
-                className="flex flex-row items-center justify-center w-16 h-16 mb-5 mr-2 border-2 border-blue-500 rounded-full bg-White"
+                className="flex flex-row justify-center items-center mr-2 mb-5 w-16 h-16 rounded-full border-2 border-blue-500 bg-White"
                 onPress={() => fitCameraToCentroids()}
                 style={style.shadowMedium}
               >
-                <MapPinned className="text-blue-500" size={30} />
+                <MapPinned color="#3b82f6" size={30} />
               </Pressable>
               <Pressable
-                className="flex flex-row items-center justify-center w-16 h-16 mb-5 border-2 border-blue-500 rounded-full bg-White"
+                className="flex flex-row justify-center items-center mb-5 w-16 h-16 rounded-full border-2 border-blue-500 bg-White"
                 onPress={() => focusOnLocation()}
                 style={style.shadowMedium}
               >
-                <Navigation className="text-blue-500" size={30} />
+                <Navigation color="#3b82f6" size={30} />
               </Pressable>
             </View>
 
@@ -1009,10 +1030,10 @@ export default function MapView({
                 setAddingNewPlot(true);
                 setCardInfo(null);
               }}
-              className="flex flex-row items-center justify-center w-full h-12 px-5 mb-10 rounded-md bg-Orange"
+              className="flex flex-row justify-center items-center px-5 mb-10 w-full h-12 rounded-md bg-Orange"
               style={style.shadowLarge}
             >
-              <Plus className="mr-2 text-White" size={20} />
+              <Plus color={Colors.white} style={{ marginRight: 8 }} size={20} />
               <Text className="text-White font-semibold text-[16px]">
                 {i18n.t('plots.addPlot.newPlot')}
               </Text>

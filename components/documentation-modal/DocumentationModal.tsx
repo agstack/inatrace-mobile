@@ -4,6 +4,7 @@ import Modal from 'react-native-modalbox';
 import i18n from '@/locales/i18n';
 import { useContext } from 'react';
 import { AuthContext } from '@/context/AuthContext';
+import Colors from '@/constants/Colors';
 
 export default function DocumentationModal() {
   const { documentationModal, setDocumentationModal } = useContext(AuthContext);
@@ -37,7 +38,7 @@ export default function DocumentationModal() {
           }}
         >
           <View>
-            <View className="flex flex-row items-center justify-between mb-2">
+            <View className="flex flex-row justify-between items-center mb-2">
               <Text className="text-[18px] font-medium">
                 {i18n.t('documentation.title')}
               </Text>
@@ -45,7 +46,7 @@ export default function DocumentationModal() {
                 onPress={() => setDocumentationModal(false)}
                 className=""
               >
-                <X size={20} className="text-black" />
+                <X size={20} color={Colors.black} />
               </Pressable>
             </View>
             <Text className="text-[14px] text-black/70">

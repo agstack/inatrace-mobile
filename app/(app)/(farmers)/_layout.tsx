@@ -2,6 +2,7 @@ import i18n from '@/locales/i18n';
 import { Stack } from 'expo-router';
 import { ChevronLeft } from 'lucide-react-native';
 import { Pressable, Text } from 'react-native';
+import Colors from '@/constants/Colors';
 
 export default function FarmersLayout() {
   return (
@@ -41,8 +42,8 @@ export default function FarmersLayout() {
 }
 
 const LeftHeader = () => (
-  <Pressable className="flex flex-row items-center justify-center mr-3">
-    <ChevronLeft className="text-Orange" />
+  <Pressable className="flex flex-row justify-center items-center mr-3">
+    <ChevronLeft color={Colors.orange} />
     <Text className="font-medium text-Orange text-[18px]">Back</Text>
   </Pressable>
 );

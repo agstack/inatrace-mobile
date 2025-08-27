@@ -49,9 +49,12 @@ export default function SearchInput(props: SearchInputProps) {
   };
 
   return (
-    <View className="flex flex-row items-center justify-between px-5">
+    <View className="flex flex-row justify-between items-center px-5">
       <View className="relative flex flex-row items-center justify-between h-12 mt-1 border rounded-md border-LightGray bg-White w-[70%]">
-        <Search className="absolute text-LightGray left-4" />
+        <Search
+          color={Colors.lightGray}
+          style={{ position: 'absolute', left: 8 }}
+        />
         <TextInput
           placeholder={i18n.t('farmers.search')}
           value={props.input}
@@ -62,9 +65,9 @@ export default function SearchInput(props: SearchInputProps) {
       </View>
       <Pressable
         onPress={handlePresentSortModalPress}
-        className="flex flex-row items-center justify-center w-12 h-12 mt-1 border rounded-md border-LightGray bg-White"
+        className="flex flex-row justify-center items-center mt-1 w-12 h-12 rounded-md border border-LightGray bg-White"
       >
-        <ArrowDownUp className="text-LightGray" />
+        <ArrowDownUp color={Colors.lightGray} />
       </Pressable>
       <BottomSheetModal
         ref={bottomSheetSortModalRef}
@@ -93,9 +96,9 @@ export default function SearchInput(props: SearchInputProps) {
 
       <Pressable
         onPress={handlePresentFilterModalPress}
-        className="flex flex-row items-center justify-center w-12 h-12 mt-1 border rounded-md border-LightGray bg-White"
+        className="flex flex-row justify-center items-center mt-1 w-12 h-12 rounded-md border border-LightGray bg-White"
       >
-        <Filter className="text-LightGray" />
+        <Filter color={Colors.lightGray} />
       </Pressable>
       <BottomSheetModal
         ref={bottomSheetFilterModalRef}

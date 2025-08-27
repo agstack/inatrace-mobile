@@ -12,7 +12,7 @@ import {
   BottomSheetScrollView,
 } from '@gorhom/bottom-sheet';
 import { useNavigation } from 'expo-router';
-import { ChevronLeft, PlusCircle, X, XCircle } from 'lucide-react-native';
+import { ChevronLeft, PlusCircle, XCircle } from 'lucide-react-native';
 import { useCallback, useContext, useEffect, useRef, useState } from 'react';
 import { View, Text, Pressable, Alert, Platform } from 'react-native';
 import { KeyboardAwareScrollView } from 'react-native-keyboard-aware-scroll-view';
@@ -21,6 +21,7 @@ import realm from '@/realm/useRealm';
 import { FarmerSchema } from '@/realm/schemas';
 import { RequestParams } from '@/types/auth';
 import { FullWindowOverlay } from 'react-native-screens';
+import Colors from '@/constants/Colors';
 
 type NewFarmerErrors = {
   lastName: boolean;
@@ -248,9 +249,9 @@ export default function NewFarmer() {
       headerLeft: () => (
         <Pressable
           onPress={() => navigation.goBack()}
-          className="flex flex-row items-center justify-center mr-3"
+          className="flex flex-row justify-center items-center mr-3"
         >
-          <ChevronLeft className="text-Orange" />
+          <ChevronLeft color={Colors.orange} />
           <Text className="font-medium text-Orange text-[18px]">Back</Text>
         </Pressable>
       ),
@@ -718,17 +719,17 @@ export default function NewFarmer() {
         {i18n.t('farmers.info.productTypes.title')}
       </Text>
       <View className="flex items-center w-full">
-        <View className="flex flex-row flex-wrap justify-start w-full px-5 mt-2 mb-4">
+        <View className="flex flex-row flex-wrap justify-start px-5 mt-2 mb-4 w-full">
           {farmer?.farm?.farmPlantInformationList?.map((item, index) => (
             <View
               key={index}
-              className="flex flex-row items-center justify-between px-2 py-1 mt-2 mr-2 border rounded-md border-DarkGray"
+              className="flex flex-row justify-between items-center px-2 py-1 mt-2 mr-2 rounded-md border border-DarkGray"
             >
               <Text className="text-[16px] text-black mr-2">
                 {item.productType.name.trim()}
               </Text>
               <Pressable
-                className="flex items-center justify-center"
+                className="flex justify-center items-center"
                 onPress={() => {
                   setFarmer((currentFarmer: Farmer) => {
                     return {
@@ -744,7 +745,7 @@ export default function NewFarmer() {
                   });
                 }}
               >
-                <XCircle className="text-black" size={16} />
+                <XCircle color={Colors.black} size={16} />
               </Pressable>
             </View>
           ))}
@@ -825,7 +826,7 @@ export default function NewFarmer() {
           </BottomSheetScrollView>
         </BottomSheetModal>
         <Pressable onPress={() => bottomSheetRef.current?.present()}>
-          <PlusCircle className="text-black" />
+          <PlusCircle color={Colors.black} />
         </Pressable>
       </View>
       <Text className="text-[18px] font-medium mt-5 mx-5">
@@ -982,7 +983,7 @@ export default function NewFarmer() {
 
       <Pressable
         onPress={saveFarmer}
-        className="flex flex-row items-center justify-center h-12 mx-5 mt-5 mb-10 rounded-md bg-Orange"
+        className="flex flex-row justify-center items-center mx-5 mt-5 mb-10 h-12 rounded-md bg-Orange"
         style={ShadowButtonStyle}
       >
         <Text className="text-White text-[18px] font-medium">

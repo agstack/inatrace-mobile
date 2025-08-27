@@ -5,6 +5,7 @@ import Card, { ItemProps } from '@/components/common/Card';
 import { Map, Plus } from 'lucide-react-native';
 import { Farmer } from '@/types/farmer';
 import { router } from 'expo-router';
+import Colors from '@/constants/Colors';
 
 interface FarmerInformationProps {
   selectedFarmer: Farmer | null;
@@ -15,25 +16,25 @@ export default function FarmerInformation({
 }: FarmerInformationProps) {
   return (
     <ScrollView className="h-full border-t bg-White border-t-LightGray">
-      <View className="flex flex-col items-center justify-center pt-5 mx-5">
+      <View className="flex flex-col justify-center items-center pt-5 mx-5">
         <QRCode value={selectedFarmer?.id?.toString()} />
         <Text className="mt-3 mb-5">{selectedFarmer?.id}</Text>
         <Pressable
-          className="flex flex-row items-center justify-center w-full px-5 py-3 rounded-md bg-Orange"
+          className="flex flex-row justify-center items-center px-5 py-3 w-full rounded-md bg-Orange"
           onPress={() => router.push('view/new' as any)}
         >
-          <Plus className="mr-2 text-White" />
+          <Plus color={Colors.white} style={{ marginRight: 8 }} />
           <Text className="text-[16px] text-White font-semibold">
             {i18n.t('farmers.info.addNewPlot')}
           </Text>
         </Pressable>
         <Pressable
-          className="flex flex-row items-center justify-center w-full px-5 py-3 mt-4 rounded-md bg-Orange"
+          className="flex flex-row justify-center items-center px-5 py-3 mt-4 w-full rounded-md bg-Orange"
           onPress={() =>
             router.push(`view/${selectedFarmer?.id?.toString()}` as any)
           }
         >
-          <Map className="mr-2 text-White" />
+          <Map color={Colors.white} style={{ marginRight: 8 }} />
           <Text className="text-[16px] text-White font-semibold">
             {i18n.t('farmers.info.viewAllPlots')}
           </Text>

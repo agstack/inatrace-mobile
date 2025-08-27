@@ -1,3 +1,4 @@
+import Colors from '@/constants/Colors';
 import cn from '@/utils/cn';
 import { Check, LucideIcon } from 'lucide-react-native';
 import { Pressable, View, Text } from 'react-native';
@@ -10,7 +11,7 @@ type SelectorProps = {
 
 export default function SelectorMultiple(props: SelectorProps) {
   return (
-    <View className="m-5 border rounded-md border-LightGray">
+    <View className="m-5 rounded-md border border-LightGray">
       {props.items.map((item, index) => {
         const IconComponent = item?.icon;
         return (
@@ -27,13 +28,17 @@ export default function SelectorMultiple(props: SelectorProps) {
             <View className="flex flex-row items-center mr-3">
               <Text className="text-[16px] text-black">{item.label}</Text>
               {IconComponent && (
-                <IconComponent className="ml-2 text-black" size={20} />
+                <IconComponent
+                  style={{ marginLeft: 8 }}
+                  color={Colors.black}
+                  size={20}
+                />
               )}
             </View>
 
             {(props?.selected as any)?.includes(item.value) && (
               <View>
-                <Check className="text-black" size={18} />
+                <Check color={Colors.black} size={18} />
               </View>
             )}
           </Pressable>

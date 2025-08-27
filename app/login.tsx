@@ -23,6 +23,7 @@ import { useState, useContext } from 'react';
 import { AuthContext } from '@/context/AuthContext';
 import { router } from 'expo-router';
 import cn from '@/utils/cn';
+import Colors from '@/constants/Colors';
 
 export default function Login() {
   const [username, setUsername] = useState<string>('');
@@ -125,12 +126,12 @@ export default function Login() {
             }}
           >
             <View>
-              <View className="flex flex-row items-center justify-between mb-2">
+              <View className="flex flex-row justify-between items-center mb-2">
                 <Text className="text-[18px] font-medium">
                   {i18n.t('userSettings.language')}
                 </Text>
                 <Pressable onPress={() => setAskLanguage(false)} className="">
-                  <X size={20} className="text-black" />
+                  <X size={20} color={Colors.black} />
                 </Pressable>
               </View>
 
@@ -160,7 +161,7 @@ export default function Login() {
             }}
           >
             <View>
-              <View className="flex flex-row items-center justify-between mb-2">
+              <View className="flex flex-row justify-between items-center mb-2">
                 <Text className="text-[18px] font-medium">
                   {i18n.t('changeInstance')}
                 </Text>
@@ -168,11 +169,11 @@ export default function Login() {
                   onPress={() => setInstanceChange(false)}
                   className=""
                 >
-                  <X size={20} className="text-black" />
+                  <X size={20} color={Colors.black} />
                 </Pressable>
               </View>
 
-              <View className="pl-3 border rounded-md border-LightGray">
+              <View className="pl-3 rounded-md border border-LightGray">
                 {instances.map((ins, index) => (
                   <Pressable
                     key={index}
@@ -187,13 +188,13 @@ export default function Login() {
                     </Text>
                     {instance === ins ? (
                       <View className="flex flex-row items-center justify-center w-5 h-5 rounded-full bg-[#333333]">
-                        <View className="flex flex-row items-center justify-center w-4 h-4 rounded-full bg-White">
+                        <View className="flex flex-row justify-center items-center w-4 h-4 rounded-full bg-White">
                           <View className="flex flex-row items-center justify-center w-2.5 h-2.5 rounded-full bg-[#333333]" />
                         </View>
                       </View>
                     ) : (
-                      <View className="flex flex-row items-center justify-center w-5 h-5 rounded-full bg-DarkGray">
-                        <View className="flex flex-row items-center justify-center w-4 h-4 rounded-full bg-White" />
+                      <View className="flex flex-row justify-center items-center w-5 h-5 rounded-full bg-DarkGray">
+                        <View className="flex flex-row justify-center items-center w-4 h-4 rounded-full bg-White" />
                       </View>
                     )}
                   </Pressable>
@@ -215,7 +216,7 @@ export default function Login() {
             behavior="position"
             keyboardVerticalOffset={300}
           >
-            <View className="flex flex-row items-center justify-between">
+            <View className="flex flex-row justify-between items-center">
               <View>
                 <Text className="text-[24px] font-semibold">
                   {i18n.t('login.welcomeBack')}
@@ -225,7 +226,7 @@ export default function Login() {
                 </Text>
               </View>
               <Pressable onPress={() => setAskLanguage(true)}>
-                <Globe size={20} className="text-black" />
+                <Globe size={20} color="#000000" />
               </Pressable>
             </View>
 
@@ -265,7 +266,7 @@ export default function Login() {
                 <Text className="text-red-500">{loginError}</Text>
               </View>
             )}
-            <View className="flex flex-row items-center justify-between">
+            <View className="flex flex-row justify-between items-center">
               <Pressable
                 onPress={() => clickPrivacyPolicy()}
                 className="self-end"

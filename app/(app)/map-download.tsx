@@ -29,6 +29,7 @@ import Modal from 'react-native-modalbox';
 import { AuthContext } from '@/context/AuthContext';
 import cn from '@/utils/cn';
 import { CameraRef } from '@rnmapbox/maps/lib/typescript/src/components/Camera';
+import Colors from '@/constants/Colors';
 
 Mapbox.setAccessToken(process.env.EXPO_PUBLIC_MAPBOX_ACCESS_TOKEN ?? '');
 
@@ -66,9 +67,9 @@ export default function MapDownload() {
           onPress={() =>
             selectingMap ? setSelectingMap(false) : navigation.goBack()
           }
-          className="flex flex-row items-center justify-center mr-3"
+          className="flex flex-row justify-center items-center mr-3"
         >
-          <ChevronLeft className="text-Orange" />
+          <ChevronLeft color={Colors.orange} />
           <Text className="font-medium text-Orange text-[18px]">Back</Text>
         </Pressable>
       ),
@@ -249,12 +250,12 @@ export default function MapDownload() {
         }}
       >
         <View>
-          <View className="flex flex-row items-center justify-between mb-2">
+          <View className="flex flex-row justify-between items-center mb-2">
             <Text className="text-[18px] font-medium">
               {i18n.t('plots.mapTitle')}
             </Text>
             <Pressable onPress={() => setDownloadConfirm(false)} className="">
-              <X size={20} className="text-black" />
+              <X size={20} color={Colors.black} />
             </Pressable>
           </View>
 
@@ -269,7 +270,7 @@ export default function MapDownload() {
           />
         </View>
 
-        <View className="flex flex-row items-center justify-between">
+        <View className="flex flex-row justify-between items-center">
           <Pressable
             onPress={() => setDownloadConfirm(false)}
             className="bg-Green w-[48%] px-5 py-3 rounded-md flex flex-col items-center justify-center"
@@ -290,7 +291,7 @@ export default function MapDownload() {
       </Modal>
       {selectingMap ? (
         <View className="flex-1 h-full">
-          <View className="flex flex-row items-center justify-center w-full p-5 bg-White">
+          <View className="flex flex-row justify-center items-center p-5 w-full bg-White">
             <Text className="text-[20px]">
               {i18n.t('plots.offlineMapsScreen.downloadThisMap')}
             </Text>
@@ -324,13 +325,13 @@ export default function MapDownload() {
                 ]}
                 id="current-location"
               >
-                <View className="relative flex flex-row items-center justify-center w-5 h-5 bg-white rounded-full">
+                <View className="flex relative flex-row justify-center items-center w-5 h-5 bg-white rounded-full">
                   <View className="w-4 h-4 bg-blue-500 rounded-full" />
                 </View>
               </Mapbox.PointAnnotation>
             </Mapbox.MapView>
           ) : (
-            <View className="flex flex-col items-center justify-center flex-1 w-full h-full bg-White">
+            <View className="flex flex-col flex-1 justify-center items-center w-full h-full bg-White">
               <ActivityIndicator size="large" animating={true} />
               <Text className="mt-2">{i18n.t('plots.mapLoading')}</Text>
             </View>
@@ -340,13 +341,13 @@ export default function MapDownload() {
               size: estimatedSize,
             })}
           </Text>
-          <View className="flex flex-row items-center justify-between px-5 pb-5 bg-White">
+          <View className="flex flex-row justify-between items-center px-5 pb-5 bg-White">
             <Pressable
-              className="absolute flex flex-row items-center self-end justify-center w-16 h-16 mb-5 border-2 border-blue-500 rounded-full bottom-32 right-5 bg-White"
+              className="flex absolute right-5 bottom-32 flex-row justify-center items-center self-end mb-5 w-16 h-16 rounded-full border-2 border-blue-500 bg-White"
               onPress={focusOnCurrentLocation}
               style={style.shadowMedium}
             >
-              <Navigation className="text-blue-500" size={30} />
+              <Navigation color="#3b82f6" size={30} />
             </Pressable>
             <Pressable
               onPress={() => setSelectingMap(false)}
@@ -363,7 +364,11 @@ export default function MapDownload() {
               }}
               className="flex flex-row items-center justify-center w-[48%] px-5 py-3 rounded-md bg-Orange"
             >
-              <Download className="mr-2 text-White" size={20} />
+              <Download
+                color={Colors.white}
+                style={{ marginRight: 8 }}
+                size={20}
+              />
               <Text className="text-White font-semibold text-[16px]">
                 {i18n.t('plots.offlineMapsScreen.download')}
               </Text>
@@ -376,11 +381,15 @@ export default function MapDownload() {
             onPress={() => (isConnected ? setSelectingMap(true) : null)}
             className={cn(
               isConnected ? 'bg-Orange' : 'bg-LightOrange',
-              'flex flex-row items-center justify-center h-12 px-2 rounded-md'
+              'flex flex-row justify-center items-center px-2 h-12 rounded-md'
             )}
             disabled={!isConnected}
           >
-            <Download className="mr-2 text-White" size={20} />
+            <Download
+              color={Colors.white}
+              style={{ marginRight: 8 }}
+              size={20}
+            />
             <Text className="font-semibold text-[16px] text-White">
               {i18n.t('plots.offlineMapsScreen.selectYourOwnMap')}
             </Text>
@@ -412,13 +421,13 @@ export default function MapDownload() {
                 return (
                   <View
                     key={index}
-                    className="flex flex-row items-center justify-between mt-4"
+                    className="flex flex-row justify-between items-center mt-4"
                   >
-                    <View className="flex flex-row items-center justify-center">
+                    <View className="flex flex-row justify-center items-center">
                       {pack?.state === 'complete' &&
                       pack?.percentage === 100 ? (
                         <View className="flex flex-row items-center justify-center w-[24] h-[24] p-[2px] bg-blue-500 rounded-full">
-                          <Check className="text-White" size={16} />
+                          <Check color={Colors.white} size={16} />
                         </View>
                       ) : (
                         <View className="w-[24] h-[24] p-[2px] bg-Orange rounded-full flex items-center justify-center">
@@ -447,7 +456,7 @@ export default function MapDownload() {
                       onPress={() => deletePack(pack.name)}
                       className="flex-row"
                     >
-                      <Trash className="text-black" size={20} />
+                      <Trash color={Colors.black} size={20} />
                     </Pressable>
                   </View>
                 );
