@@ -5,6 +5,13 @@ INATrace is a digital open-source solution designed to enhance the economic cond
 [Learn more on Google Play](https://play.google.com/store/apps/details?hl=en-US&id=com.sunesis.inatrace)  
 [Learn more on App Store](https://apps.apple.com/us/app/inatrace/id6572305162)
 
+INATrace project is composed of 4 parts:
+
+* [Angular frontend](https://github.com/INATrace/fe/tree/main)
+* [Mobile app](https://github.com/INATrace/mobile/tree/main)
+* [Java backend](https://github.com/INATrace/backend/tree/main)
+* [Coffee network](https://github.com/INATrace/coffee-network/tree/main)
+
 ## Key Features
 
 - **Polygon Mapping & Farmer Profiles**: Create detailed profiles for farmers and map field boundaries using GPS data, ensuring accurate records of cooperative members.
