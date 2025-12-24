@@ -7,10 +7,13 @@ INATrace is a digital open-source solution designed to enhance the economic cond
 
 INATrace project is composed of 4 parts:
 
-* [Angular frontend](https://github.com/INATrace/fe/tree/main)
+* [Frontend application](https://github.com/INATrace/fe/tree/main)
 * [Mobile app](https://github.com/INATrace/mobile/tree/main)
 * [Java backend](https://github.com/INATrace/backend/tree/main)
 * [Coffee network](https://github.com/INATrace/coffee-network/tree/main)
+
+## Technical Documentation
+For detailed technical documentation, please refer to [TECHNICAL_DOCUMENTATION.md](https://github.com/agstack/inatrace-backend/blob/main/TECHNICAL_DOCUMENTATION.md).
 
 ## Key Features
 
