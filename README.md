@@ -5,12 +5,12 @@ INATrace is a digital open-source solution designed to enhance the economic cond
 [Learn more on Google Play](https://play.google.com/store/apps/details?hl=en-US&id=com.sunesis.inatrace)  
 [Learn more on App Store](https://apps.apple.com/us/app/inatrace/id6572305162)
 
-INATrace project is composed of 4 parts:
+Project is composed of 4 parts, coordinated from the [INATrace project hub](https://github.com/agstack/inatrace) (project-wide documentation and governance):
 
-* [Frontend application](https://github.com/INATrace/fe/tree/main)
-* [Mobile app](https://github.com/INATrace/mobile/tree/main)
-* [Java backend](https://github.com/INATrace/backend/tree/main)
-* [Coffee network](https://github.com/INATrace/coffee-network/tree/main)
+* [Frontend application](https://github.com/agstack/inatrace-frontend)
+* [Mobile app](https://github.com/agstack/inatrace-mobile)
+* [Java backend](https://github.com/agstack/inatrace-backend)
+* [Coffee network](https://github.com/agstack/inatrace-coffee-network)
 
 ## Technical Documentation
 For detailed technical documentation, please refer to [TECHNICAL_DOCUMENTATION.md](https://github.com/agstack/inatrace-backend/blob/main/TECHNICAL_DOCUMENTATION.md).
@@ -28,7 +28,7 @@ To run the INATrace app locally, follow these steps:
 1. **Clone the Repository**:
 
    ```bash
-   git clone https://github.com/INATrace/mobile.git
+   git clone https://github.com/agstack/inatrace-mobile.git
    ```
 
 2. **Install Dependencies**: Ensure you have [Node.js](https://nodejs.org/) installed, then install the project dependencies.
@@ -94,7 +94,7 @@ For detailed instructions and troubleshooting, refer to the [official EAS Build 
 
 - **Documentation**: Comprehensive guides and tutorials are available on the [INATrace Documentation Site](https://inatrace-docs.vercel.app/).
 
-- **Support**: For assistance, please contact our support team at support@inatrace.org.
+- **Questions and discussion**: [INATrace mailing list](https://lists.agstack.org/g/inatrace).
 
 By following these instructions, you can effectively run and build the INATrace app locally, contributing to a more transparent and equitable global supply chain.
 
