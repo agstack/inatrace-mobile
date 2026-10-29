@@ -8,6 +8,7 @@ import {
   Platform,
   Dimensions,
   ActivityIndicator,
+  Alert,
 } from 'react-native';
 import {
   useCallback,
@@ -93,9 +94,11 @@ export default function UserSettings() {
     }
   }, [selectedCompany, companies]);
 
-  const handleLogOut = () => {
-    logOut();
-    router.replace('/login');
+  const handleLogOut = async () => {
+    try {
+      await logOut();
+      router.replace('/login');
+    } catch (_) { Alert.alert(i18n.t('logoutError')); }
   };
 
   const resetPassword = async () => {
