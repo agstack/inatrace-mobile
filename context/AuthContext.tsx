@@ -13,17 +13,22 @@ import { uuid } from 'expo-modules-core';
 import { Plot } from '@/types/plot';
 import { decode } from 'base-64';
 import realm from '@/realm/useRealm';
-import { FarmerSchema, PlotSchema } from '@/realm/schemas';
+import { FarmerSchema } from '@/realm/schemas';
 
 import guestCountries from '@/context/guestCountries.json';
 import guestProductTypes from '@/context/guestProductTypes.json';
 import { useSelectedFarmerState } from '@/state/state';
+import { NativeModules } from 'react-native';
+import { getItemAsync } from 'expo-secure-store';
+import { clearOfflineContext, currentOfflinePath, selectOfflineContext } from '@/realm/context';
+import { allowSessionRequests, cancelSessionRequests, isCurrentSession, sessionGeneration } from '@/utils/sessionRequests';
 
-let creatingImageCacheDir: any = null;
+const imageDirectoryJobs = new Map<string, Promise<void>>();
+
 
 export const AuthContext = createContext<{
   logIn: (username: string, password: string) => Promise<LogInResponse>;
-  logOut: () => void;
+  logOut: () => Promise<void>;
   logInGuest: () => Promise<void>;
   checkAuth: () => Promise<boolean>;
   selectCompany: (company: number | string | null) => void;
@@ -45,7 +50,7 @@ export const AuthContext = createContext<{
   documentationModal: boolean;
 }>({
   logIn: async () => ({ success: false, errorStatus: '' }),
-  logOut: () => null,
+  logOut: async () => undefined,
   logInGuest: async () => void 0,
   checkAuth: async () => false,
   makeRequest: async () => null,
@@ -101,7 +106,7 @@ export function SessionProvider(props: React.PropsWithChildren<any>) {
     'asyncStorage'
   );
 
-  const [instance, setInstance] = useStorageState<string>(
+  const [instance, setStoredInstance] = useStorageState<string>(
     'instance',
     process.env.EXPO_PUBLIC_API_URI ?? ''
   );
@@ -112,8 +117,13 @@ export function SessionProvider(props: React.PropsWithChildren<any>) {
 
   const [guestAccess, setGuestAccess] = useState<boolean>(false);
 
+  const setInstance = (value: string) => {
+    if (guestAccess || (accessToken && accessToken !== 'none')) return;
+    void setStoredInstance(value);
+  };
+
   useEffect(() => {
-    if (instance === 'none') setInstance(process.env.EXPO_PUBLIC_API_URI ?? '');
+    if (instance === 'none') void setStoredInstance(process.env.EXPO_PUBLIC_API_URI ?? '');
   }, [instance]);
 
   useEffect(() => {
@@ -128,8 +138,25 @@ export function SessionProvider(props: React.PropsWithChildren<any>) {
 
   const [isConnected, setIsConnected] = useState<boolean>(false);
   const [newPlot, setNewPlot] = useState<Plot | null>(null);
+  const renderGeneration = sessionGeneration();
 
   const checkAuth = async (): Promise<boolean> => {
+    let account = user && typeof user === 'object' ? user : null;
+    let server = instance && instance !== 'none' ? instance : '';
+    if (!account) {
+      const stored = await getItemAsync('user');
+      if (stored) account = JSON.parse(stored);
+    }
+    if (!server) {
+      const stored = await getItemAsync('instance');
+      if (stored) server = JSON.parse(stored);
+    }
+    if (account?.id != null && server) {
+      await selectOfflineContext(server, account.id);
+      allowSessionRequests(server);
+    } else if (accessToken && accessToken !== 'none') {
+      return false;
+    }
     if (!(await NetInfo.fetch()).isConnected) {
       return true;
     }
@@ -145,7 +172,10 @@ export function SessionProvider(props: React.PropsWithChildren<any>) {
     username: string,
     password: string
   ): Promise<LogInResponse> => {
+    if (!NativeModules.ServerTransport) return { success: false, errorStatus: 'GENERIC_ERROR' };
+    const generation = sessionGeneration();
     try {
+      allowSessionRequests(instance);
       const responseLogin = await axios.post(`${instance}/api/user/login`, {
         username,
         password,
@@ -159,16 +189,15 @@ export function SessionProvider(props: React.PropsWithChildren<any>) {
           .split(';')[0]
           .split('=')[1];
 
-        await setAccessToken(accessToken);
-
         const responseUserData = await axios.get(
           `${instance}/api/user/profile`
         );
 
         if (responseUserData.data.status === 'OK') {
+          if (!isCurrentSession(generation)) return { success: false, errorStatus: 'GENERIC_ERROR' };
           setGuestAccess(false);
-          await deleteGuestFarmerIfNecessary();
           const user = responseUserData.data.data as User;
+          await selectOfflineContext(instance, user.id);
           await setUser(user);
           await setSelectedCompany(user.companyIds[0]);
 
@@ -189,7 +218,8 @@ export function SessionProvider(props: React.PropsWithChildren<any>) {
               if (response.data.status === 'OK' && response.data.data.logo) {
                 const logoFilePath = await downloadImageToFileSystem(
                   `${instance}/api/common/image/${response.data.data.logo.storageKey}/SMALL`,
-                  accessToken
+                  accessToken,
+                  currentOfflinePath()
                 );
 
                 const companyInfo = {
@@ -210,13 +240,30 @@ export function SessionProvider(props: React.PropsWithChildren<any>) {
           );
           const companyDetailsResp = await Promise.all(companyDetails);
 
+          if (!isCurrentSession(generation)) return { success: false, errorStatus: 'GENERIC_ERROR' };
           await setCompanies(companyDetailsResp);
+          await setAccessToken(accessToken);
 
           return { success: true, errorStatus: '' };
         }
+        throw new Error('Invalid user profile');
       }
+      throw new Error('Missing authentication cookie');
     } catch (error: any) {
-      if (error.response.data.status === 'AUTH_ERROR') {
+      if (isCurrentSession(generation)) {
+        try {
+          await cancelSessionRequests();
+          await NativeModules.ServerTransport.clearCookies();
+          await setAccessToken(null);
+          await setUser(null);
+          await setSelectedCompany(null);
+          await setCompanies(null);
+          clearOfflineContext();
+        } catch (_) {
+          // Keep requests blocked if session cleanup fails.
+        }
+      }
+      if (error?.response?.data?.status === 'AUTH_ERROR') {
         return { success: false, errorStatus: 'AUTH_ERROR' };
       } else {
         return { success: false, errorStatus: 'GENERIC_ERROR' };
@@ -227,20 +274,25 @@ export function SessionProvider(props: React.PropsWithChildren<any>) {
   };
 
   const logOut = async () => {
+    if (!NativeModules.ServerTransport) throw new Error('Server transport is unavailable');
+    await cancelSessionRequests();
+    await NativeModules.ServerTransport.clearCookies();
     await setAccessToken(null);
     await setUser(null);
     await setSelectedCompany(null);
     await setCompanies(null);
+    await setProductTypes(null);
+    await setCountries(null);
     setSelectedFarmer(null);
     setNewPlot(null);
     setGuestAccess(false);
 
-    await realm.realmDeleteAll(FarmerSchema, 'synced == true');
-
-    clearImageCache();
+    clearOfflineContext();
   };
 
   const logInGuest = async () => {
+    allowSessionRequests(instance);
+    await selectOfflineContext(instance, 0);
     setGuestAccess(true);
     await setUser(null);
     await setSelectedCompany(null);
@@ -330,39 +382,15 @@ export function SessionProvider(props: React.PropsWithChildren<any>) {
     }
   };
 
-  const deleteGuestFarmerIfNecessary = async () => {
-    const farmers = (await realm.realmRead(
-      FarmerSchema,
-      undefined,
-      undefined,
-      undefined,
-      undefined,
-      'synced == false'
-    )) as any;
-
-    if (farmers.length === 1) {
-      const plots = (await realm.realmRead(
-        PlotSchema,
-        undefined,
-        undefined,
-        undefined,
-        undefined,
-        'synced == false'
-      )) as any;
-
-      if (plots.length === 0) {
-        await realm.realmDeleteOne(FarmerSchema, 'id == "0"');
-      }
-    }
-  };
-
   const makeRequest = async ({ url, method, body, headers }: RequestParams) => {
+    if (!isCurrentSession(renderGeneration)) throw new Error('Session changed');
     if (isTokenExpired(accessToken ?? '')) {
-      logOut();
+      await logOut();
       return;
     }
 
-    return await axios.request({
+    const generation = renderGeneration;
+    const response = await axios.request({
       url: instance + url,
       method,
       headers: {
@@ -372,9 +400,12 @@ export function SessionProvider(props: React.PropsWithChildren<any>) {
       },
       data: body,
     });
+    if (!isCurrentSession(generation)) throw new Error('Session changed');
+    return response;
   };
 
   const fetchProductTypes = async (user: User) => {
+    const generation = sessionGeneration();
     const productTypesPromises = user.companyIds.map((companyId) =>
       axios
         .get(
@@ -395,18 +426,21 @@ export function SessionProvider(props: React.PropsWithChildren<any>) {
 
     const productTypesResp = await Promise.all(productTypes);
 
-    await setProductTypes(productTypesResp as any);
+    if (isCurrentSession(generation)) await setProductTypes(productTypesResp as any);
   };
 
   const fetchCountries = async () => {
+    const generation = sessionGeneration();
     const countriesResponse = await axios.get(
       `${instance}/api/common/countries?requestType=FETCH&limit=500&sort=ASC`
     );
     const countriesResp = countriesResponse.data.data.items as Country[];
-    await setCountries(countriesResp);
+    if (isCurrentSession(generation)) await setCountries(countriesResp);
   };
 
   const fetchFarmers = async (user: User) => {
+    const generation = sessionGeneration();
+    const path = currentOfflinePath();
     await realm.realmDeleteAll(FarmerSchema, 'synced == true');
     const farmersPromises = user.companyIds.map((companyId) =>
       axios
@@ -445,7 +479,9 @@ export function SessionProvider(props: React.PropsWithChildren<any>) {
       });
     });
 
-    await realm.realmWriteMultiple(FarmerSchema, farmersRealm);
+    if (isCurrentSession(generation) && currentOfflinePath() === path) {
+      await realm.realmWriteMultiple(FarmerSchema, farmersRealm);
+    }
   };
 
   useEffect(() => {
@@ -488,30 +524,17 @@ export function SessionProvider(props: React.PropsWithChildren<any>) {
   );
 }
 
-const downloadImageToFileSystem = async (url: string, accessToken: string) => {
+const downloadImageToFileSystem = async (url: string, accessToken: string, contextPath: string) => {
   try {
     const { config, fs } = RNFetchBlob;
-    const imageCacheDir = `${fs.dirs.CacheDir}/inatrace_images`;
-
-    if (!creatingImageCacheDir) {
-      creatingImageCacheDir = fs
-        .exists(imageCacheDir)
-        .then((exists) => {
-          if (!exists) {
-            return fs.mkdir(imageCacheDir);
-          }
-        })
-        .catch((error) => {
-          console.error('Directory check/create error:', error);
-        })
-        .finally(() => {
-          creatingImageCacheDir = null;
-        });
-
-      await creatingImageCacheDir;
-    } else {
-      await creatingImageCacheDir;
+    const imageCacheDir = `${fs.dirs.CacheDir}/inatrace_images_${contextPath}`;
+    let job = imageDirectoryJobs.get(imageCacheDir);
+    if (!job) {
+      job = (async () => { if (!await fs.exists(imageCacheDir)) await fs.mkdir(imageCacheDir); })();
+      imageDirectoryJobs.set(imageCacheDir, job);
+      job.finally(() => imageDirectoryJobs.delete(imageCacheDir)).catch(() => undefined);
     }
+    await job;
 
     const options = {
       path: `${imageCacheDir}/${uuid.v4()}.png`,
@@ -526,18 +549,5 @@ const downloadImageToFileSystem = async (url: string, accessToken: string) => {
   } catch (error) {
     console.error('Error downloading and saving image:', error);
     return null;
-  }
-};
-
-const clearImageCache = async () => {
-  const { fs } = RNFetchBlob;
-  const imageCacheDir = `${fs.dirs.CacheDir}/inatrace_images`;
-
-  try {
-    if (await fs.exists(imageCacheDir)) {
-      await fs.unlink(imageCacheDir);
-    }
-  } catch (error) {
-    console.error('Error clearing image cache directory:', error);
   }
 };

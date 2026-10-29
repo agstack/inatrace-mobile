@@ -1,13 +1,23 @@
 import Realm from 'realm';
-import { uuid } from 'expo-modules-core';
+import { currentOfflinePath } from './context';
+import { isCurrentSession, sessionGeneration } from '../utils/sessionRequests';
+
+async function openScoped(schema: any) {
+  const path = currentOfflinePath();
+  const generation = sessionGeneration();
+  const realm = await Realm.open({ path, schema: [schema] });
+  const check = () => {
+    if (!isCurrentSession(generation) || currentOfflinePath() !== path) throw new Error('Offline context changed');
+  };
+  try { check(); } catch (error) { realm.close(); throw error; }
+  return { realm, check };
+}
 
 const realmWrite = async (schema: any, data: any) => {
-  const realm = await Realm.open({
-    path: 'myrealm',
-    schema: [schema],
-  });
+  const { realm, check } = await openScoped(schema);
 
   try {
+    check();
     realm.write(() => {
       realm.create(schema.name, data, Realm.UpdateMode.Modified);
     });
@@ -25,12 +35,10 @@ const realmUpdate = async (
   property: any,
   value: any
 ) => {
-  const realm = await Realm.open({
-    path: 'myrealm',
-    schema: [schema],
-  });
+  const { realm, check } = await openScoped(schema);
 
   try {
+    check();
     realm.write(() => {
       let object = realm.objectForPrimaryKey(schema.name, id);
       if (!object) {
@@ -48,12 +56,10 @@ const realmUpdate = async (
 };
 
 const realmWriteMultiple = async (schema: any, data: any[]) => {
-  const realm = await Realm.open({
-    path: 'myrealm',
-    schema: [schema],
-  });
+  const { realm, check } = await openScoped(schema);
 
   try {
+    check();
     realm.write(() => {
       data.forEach((item) => {
         realm.create(schema.name, item, Realm.UpdateMode.Modified);
@@ -78,10 +84,7 @@ const realmRead = async (
   sortOrder: 'ASC' | 'DESC' = 'ASC',
   filter?: string
 ) => {
-  const realm = await Realm.open({
-    path: 'myrealm',
-    schema: [schema],
-  });
+  const { realm, check } = await openScoped(schema);
 
   try {
     let objects = realm.objects(schema.name);
@@ -102,6 +105,7 @@ const realmRead = async (
     }
     const plainResults = results.map((obj) => Object.assign({}, obj));
 
+    check();
     return plainResults;
   } catch (error) {
     console.error('Failed to query the Realm database:', error);
@@ -112,12 +116,10 @@ const realmRead = async (
 };
 
 const realmDeleteOne = async (schema: any, filter: string) => {
-  const realm = await Realm.open({
-    path: 'myrealm',
-    schema: [schema],
-  });
+  const { realm, check } = await openScoped(schema);
 
   try {
+    check();
     realm.write(() => {
       let objects = realm.objects(schema.name);
       if (filter && filter.trim() !== '') {
@@ -138,12 +140,10 @@ const realmDeleteOne = async (schema: any, filter: string) => {
 };
 
 const realmDeleteAll = async (schema: any, filter?: string) => {
-  const realm = await Realm.open({
-    path: 'myrealm',
-    schema: [schema],
-  });
+  const { realm, check } = await openScoped(schema);
 
   try {
+    check();
     realm.write(() => {
       let objects = realm.objects(schema.name);
       if (filter && filter.trim() !== '') {

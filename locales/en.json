@@ -4,6 +4,9 @@
   "ok": "OK",
   "loading": "Loading...",
   "changeInstance": "Change instance",
+  "logoutError": "Could not safely close the session. Please try again.",
+  "legacyRecovery": {"title":"Recover offline data","pending":"There are %{count} offline records from an earlier version.","confirm":"Only continue if ALL of these records belong to this server and this account. The original data will be kept.","cancel":"Cancel","recover":"Recover","error":"Could not recover offline data. The original data is preserved."},
+  "server": {"label":"Server","official":"Default server","address":"Server address","save":"Save server","selectHint":"Choose or add a server","add":"Add server","empty":"Enter a server address.","invalid":"Enter a valid HTTPS address.","duplicate":"This server is already in the list.","unavailable":"Could not validate this server. Check the address and connection.","loadError":"Could not load saved servers.","syncError":"Some items could not be synchronized. Pending items were kept."},
   "privacyPolicy": "Privacy policy",
   "guestAccess": "Guest access",
   "input": {

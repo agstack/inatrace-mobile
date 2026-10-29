@@ -4,6 +4,9 @@
   "ok": "OK",
   "loading": "Cargando...",
   "changeInstance": "Cambiar instancia",
+  "logoutError": "No se pudo cerrar la sesión de forma segura. Inténtalo de nuevo.",
+  "legacyRecovery": {"title":"Recuperar datos sin conexión","pending":"Hay %{count} registros sin conexión de una versión anterior.","confirm":"Continúa solo si TODOS los registros pertenecen a este servidor y cuenta. Se conservarán los datos originales.","cancel":"Cancelar","recover":"Recuperar","error":"No se pudieron recuperar los datos. Los originales se conservan."},
+  "server": {"label":"Servidor","official":"Servidor predeterminado","address":"Dirección del servidor","save":"Guardar servidor","selectHint":"Elige o añade un servidor","add":"Añadir servidor","empty":"Introduce una dirección del servidor.","invalid":"Introduce una dirección HTTPS válida.","duplicate":"Este servidor ya está en la lista.","unavailable":"No se pudo validar el servidor.","loadError":"No se pudieron cargar los servidores guardados.","syncError":"Algunos elementos no se sincronizaron y siguen pendientes."},
   "privacyPolicy": "Política de privacidad",
   "guestAccess": "Acceso de invitado",
   "input": {

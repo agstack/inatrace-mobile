@@ -4,6 +4,9 @@
   "ok": "OK",
   "loading": "Birimo birakorwa...",
   "changeInstance": "Hindura ikimenyetso",
+  "logoutError": "Ntibyashobotse gusohoka neza. Ongera ugerageze.",
+  "legacyRecovery": {"title":"Kugarura amakuru","pending":"Hari amakuru %{count} yabitswe mbere.","confirm":"Komeza gusa niba ayo makuru YOSE ari aya seriveri na konti ukoresha. Amakuru ya mbere azabikwa.","cancel":"Hagarika","recover":"Garura","error":"Ntibyashobotse kugarura amakuru. Amakuru ya mbere arabitswe."},
+  "server": {"label":"Seriveri","official":"Seriveri isanzwe","address":"Aderesi ya seriveri","save":"Bika seriveri","selectHint":"Hitamo cyangwa wongereho seriveri","add":"Ongeraho seriveri","empty":"Andika aderesi ya seriveri.","invalid":"Andika aderesi ya HTTPS yemewe.","duplicate":"Iyi seriveri isanzwe iri ku rutonde.","unavailable":"Ntibyashobotse kugenzura seriveri.","loadError":"Ntibyashobotse kubona seriveri zabitswe.","syncError":"Hari amakuru atoherejwe; yabitswe kugira ngo wongere ugerageze."},
   "privacyPolicy": "Politiki y'ubuzima bwite",
   "guestAccess": "Uburenganzira bw'umushyitsi",
   "input": {

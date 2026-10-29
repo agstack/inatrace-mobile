@@ -32,6 +32,9 @@ import { FullWindowOverlay } from 'react-native-screens';
 import Selector from '@/components/common/Selector';
 import { User } from '@/types/user';
 import Colors from '@/constants/Colors';
+import { currentOfflinePath } from '@/realm/context';
+import { isCurrentSession, sessionGeneration } from '@/utils/sessionRequests';
+import { copyLegacyPending, legacyPendingCounts } from '@/realm/legacyRecovery';
 
 export default function DataSync() {
   const navigation = useNavigation();
@@ -60,6 +63,7 @@ export default function DataSync() {
 
   const [loading, setLoading] = useState<boolean>(true);
   const [syncing, setSyncing] = useState<boolean>(false);
+  const [legacyCount, setLegacyCount] = useState(0);
 
   const [editingPlot, setEditingPlot] = useState<any>(null);
 
@@ -84,7 +88,23 @@ export default function DataSync() {
     });
 
     getItemsToSync();
+    legacyPendingCounts().then(counts => setLegacyCount(counts.farmers + counts.plots)).catch(() => {
+      Alert.alert(i18n.t('legacyRecovery.title'), i18n.t('legacyRecovery.error'));
+    });
   }, []);
+
+  const recoverLegacy = () => {
+    Alert.alert(i18n.t('legacyRecovery.title'), i18n.t('legacyRecovery.confirm'), [
+      { text: i18n.t('legacyRecovery.cancel'), style: 'cancel' },
+      { text: i18n.t('legacyRecovery.recover'), onPress: async () => {
+        try {
+          await copyLegacyPending(user.id);
+          await getItemsToSync();
+          setLegacyCount(0);
+        } catch (_) { Alert.alert(i18n.t('legacyRecovery.title'), i18n.t('legacyRecovery.error')); }
+      } },
+    ]);
+  };
 
   const getItemsToSync = async () => {
     setLoading(true);
@@ -141,6 +161,12 @@ export default function DataSync() {
     }
 
     setSyncing(true);
+    const context = currentOfflinePath();
+    const generation = sessionGeneration();
+    const assertContext = () => {
+      if (!isCurrentSession(generation) || currentOfflinePath() !== context) throw new Error('Session changed');
+    };
+    let success = true;
 
     try {
       let farmerPlots: any = [];
@@ -197,12 +223,14 @@ export default function DataSync() {
       const farmerPromiseResults = await Promise.all(farmerPromises);
 
       for (const { result, farmerId, plotIds } of farmerPromiseResults) {
+        assertContext();
         if (result.data.status === 'OK') {
           await realm.realmUpdate(FarmerSchema, farmerId, 'synced', true);
           for (const plotId of plotIds) {
+            assertContext();
             await realm.realmDeleteOne(PlotSchema, `id == '${plotId}'`);
           }
-        }
+        } else success = false;
       }
 
       const plotsLeft = plotsToSync.filter(
@@ -248,16 +276,20 @@ export default function DataSync() {
       const plotPromiseResults = await Promise.all(plotPromises);
 
       for (const { result, plotId } of plotPromiseResults) {
+        assertContext();
         if (result.data.status === 'OK') {
           await realm.realmDeleteOne(PlotSchema, `id == '${plotId}'`);
-        }
+        } else success = false;
       }
     } catch (error) {
+      success = false;
       console.error(error);
     } finally {
       setSyncing(false);
-      await getItemsToSync();
-      Alert.alert(i18n.t('synced.syncedTitle'), i18n.t('synced.syncedMessage'));
+      if (isCurrentSession(generation)) {
+        await getItemsToSync();
+        Alert.alert(i18n.t('synced.syncedTitle'), success ? i18n.t('synced.syncedMessage') : i18n.t('server.syncError'));
+      }
     }
   };
 
@@ -275,7 +307,7 @@ export default function DataSync() {
   };
 
   const openLink = async () => {
-    const url = instance.includes('pro') ? 'https://inatrace.pro' : instance;
+    const url = instance;
     const canOpen = await Linking.canOpenURL(url);
 
     if (canOpen) {
@@ -305,6 +337,10 @@ export default function DataSync() {
       ) : (
         <View className="h-full">
           <ScrollView className="flex flex-col pt-5 h-full bg-White">
+            {legacyCount > 0 && !guestAccess ? <Pressable onPress={recoverLegacy} className="p-3 mx-5 mb-4 rounded-md bg-LightOrange">
+              <Text>{i18n.t('legacyRecovery.pending', { count: legacyCount })}</Text>
+              <Text className="font-bold">{i18n.t('legacyRecovery.recover')}</Text>
+            </Pressable> : null}
             <Text className="text-[18px] font-medium mx-5">
               {i18n.t('farmers.title')}
             </Text>
@@ -486,7 +522,7 @@ export default function DataSync() {
             className="pb-5 bg-White"
             onPress={syncData}
             disabled={
-              !isConnected ||
+              syncing || !isConnected ||
               (farmersToSync.length === 0 && plotsToSync.length === 0)
             }
           >
@@ -494,6 +530,7 @@ export default function DataSync() {
               <View
                 className={cn(
                   pressed ||
+                    syncing ||
                     !isConnected ||
                     (farmersToSync.length === 0 && plotsToSync.length === 0)
                     ? 'bg-LightOrange'

@@ -5,7 +5,7 @@ export default ({ config }) => ({
     ...config.expo,
     name: 'INATrace',
     slug: 'inatrace-mobile',
-    version: '1.9.0',
+    version: '1.20.0',
     orientation: 'portrait',
     icon: './assets/images/icon.png',
     scheme: 'myapp',
@@ -52,6 +52,7 @@ export default ({ config }) => ({
     },
     plugins: [
       'expo-router',
+      './plugins/withServerTransport',
       [
         '@rnmapbox/maps',
         {
