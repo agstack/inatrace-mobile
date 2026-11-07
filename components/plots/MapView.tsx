@@ -927,6 +927,20 @@ export default function MapView({
               ) : (
                 <>
                   <Pressable
+                    onPress={() => setManualMode(!manualMode)}
+                    className="flex flex-row justify-center items-center px-5 py-3 mb-2 rounded-md bg-Orange"
+                  >
+                    <MapPin
+                      color={Colors.white}
+                      style={{ marginRight: 8 }}
+                      size={20}
+                    />
+                    <Text className="text-White font-semibold text-[16px]">
+                      {i18n.t('plots.addPlot.toggleManual')}
+                    </Text>
+                  </Pressable>
+
+                  <Pressable
                     onPress={addLocationToLocations}
                     className={cn(
                       'flex flex-row items-center justify-center px-5 py-3 rounded-md bg-Green',
@@ -949,23 +963,6 @@ export default function MapView({
                       {i18n.t('plots.addPlot.addCurrentLocation')}
                     </Text>
                   </Pressable>
-
-                  {location?.coords.accuracy &&
-                  location?.coords.accuracy > 10 ? (
-                    <Pressable
-                      onPress={() => setManualMode(!manualMode)}
-                      className="flex flex-row justify-center items-center px-5 py-3 mt-2 rounded-md bg-Orange"
-                    >
-                      <MapPin
-                        color={Colors.white}
-                        style={{ marginRight: 8 }}
-                        size={20}
-                      />
-                      <Text className="text-White font-semibold text-[16px]">
-                        {i18n.t('plots.addPlot.toggleManual')}
-                      </Text>
-                    </Pressable>
-                  ) : null}
 
                   <View className="flex flex-row justify-center items-center mt-2">
                     <Pressable
