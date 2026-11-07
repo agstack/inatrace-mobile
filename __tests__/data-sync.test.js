@@ -7,6 +7,9 @@ import realm from '@/realm/useRealm';
 import http from 'http';
 
 jest.mock('expo-router', () => ({ useNavigation: () => ({ setOptions: jest.fn(), goBack: jest.fn() }) }));
+jest.mock('react-native-safe-area-context', () => ({
+  useSafeAreaInsets: () => ({ top: 0, right: 0, bottom: 0, left: 0 }),
+}));
 jest.mock('@/context/AuthContext', () => ({ AuthContext: require('react').createContext({}) }));
 jest.mock('@/locales/i18n', () => ({ t: key => key }));
 jest.mock('@/realm/useRealm', () => ({ __esModule: true, default: {
