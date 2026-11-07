@@ -9,7 +9,7 @@ import {
   BottomSheetBackdrop,
   BottomSheetModal,
   BottomSheetScrollView,
-} from '@gorhom/bottom-sheet';
+} from '@/components/common/AppBottomSheet';
 import { Link, useNavigation } from 'expo-router';
 import { ChevronLeft, PlusCircle, User2, XCircle } from 'lucide-react-native';
 import {

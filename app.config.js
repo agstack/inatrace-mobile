@@ -53,6 +53,8 @@ export default ({ config }) => ({
     plugins: [
       'expo-router',
       './plugins/withServerTransport',
+      './plugins/withAndroidProguardRules',
+      './plugins/withCleartextTraffic',
       [
         '@rnmapbox/maps',
         {

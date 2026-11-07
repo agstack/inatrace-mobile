@@ -3,7 +3,7 @@ import { useFonts } from 'expo-font';
 import { Slot } from 'expo-router';
 import * as SplashScreen from 'expo-splash-screen';
 import { useEffect, useState } from 'react';
-import { BottomSheetModalProvider } from '@gorhom/bottom-sheet';
+import { BottomSheetModalProvider } from '@/components/common/AppBottomSheet';
 
 import { SessionProvider } from '@/context/AuthContext';
 import i18n from '@/locales/i18n';

@@ -1,12 +1,11 @@
 import React from 'react';
-import { NativeModules, Pressable, Text, TextInput } from 'react-native';
+import { NativeModules, Text, TextInput } from 'react-native';
 import renderer, { act } from 'react-test-renderer';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import Login from '../app/login';
 import { AuthContext } from '@/context/AuthContext';
 import { router } from 'expo-router';
 
-jest.mock('react-native-modalbox', () => ({ children }) => children);
 jest.mock('@/components/svg/LoginLowerBlob', () => () => null);
 jest.mock('@/components/svg/LoginUpperBlob', () => () => null);
 jest.mock('@/components/settings/LanguageSwitcher', () => () => null);
@@ -17,6 +16,20 @@ jest.mock('@react-native-async-storage/async-storage', () => ({ __esModule: true
   getItem: jest.fn(async () => null), setItem: jest.fn(async () => {}),
 } }));
 jest.mock('@/context/AuthContext', () => ({ AuthContext: require('react').createContext({}) }));
+
+
+function pressableWithText(root, text) {
+  const textNode = root.findAllByType(Text).find((node) => node.props.children === text);
+  let node = textNode;
+  while (node && typeof node.props?.onPress !== 'function') node = node.parent;
+  return node;
+}
+
+function pressableWithLabel(root, label) {
+  let node = root.findAll((candidate) => candidate.props?.accessibilityLabel === label)[0];
+  while (node && typeof node.props?.onPress !== 'function') node = node.parent;
+  return node;
+}
 
 global.IS_REACT_ACT_ENVIRONMENT = true;
 beforeEach(() => jest.clearAllMocks());
@@ -31,15 +44,13 @@ test('adding a compatible server validates it, persists it and selects it', asyn
   await act(async () => { tree = renderer.create(<AuthContext.Provider value={{
     instance: 'https://default.example', setInstance: select, logIn: jest.fn(), logInGuest: jest.fn(),
   }}><Login /></AuthContext.Provider>); });
-  const open = tree.root.findAllByType(Pressable).find(p => p.props.accessibilityLabel === 'server.label');
+  const open = pressableWithLabel(tree.root, 'server.label');
   await act(async () => { open.props.onPress(); });
-  const addOption = tree.root.findAllByType(Pressable).find(p => p.findAllByType(Text)
-    .some(t => t.props.children === 'server.add'));
+  const addOption = pressableWithText(tree.root, 'server.add');
   await act(async () => { addOption.props.onPress(); });
   const input = tree.root.findByType(TextInput);
   await act(async () => { input.props.onChangeText('https://server.example/'); });
-  const add = tree.root.findAllByType(Pressable).find(p => p.findAllByType(Text)
-    .some(t => t.props.children === 'server.save'));
+  const add = pressableWithText(tree.root, 'server.save');
   await act(async () => { await add.props.onPress(); });
   expect(NativeModules.ServerTransport.discover).toHaveBeenCalledTimes(3);
   expect(AsyncStorage.setItem).toHaveBeenCalledWith('saved_server_urls_v1', JSON.stringify(['https://server.example']));
@@ -54,13 +65,11 @@ test('invalid and incompatible addresses are not saved or selected', async () =>
   await act(async () => { tree = renderer.create(<AuthContext.Provider value={{
     instance: 'https://default.example', setInstance: select, logIn: jest.fn(), logInGuest: jest.fn(),
   }}><Login /></AuthContext.Provider>); });
-  const open = tree.root.findAllByType(Pressable).find(p => p.props.accessibilityLabel === 'server.label');
+  const open = pressableWithLabel(tree.root, 'server.label');
   await act(async () => { open.props.onPress(); });
-  const addOption = tree.root.findAllByType(Pressable).find(p => p.findAllByType(Text)
-    .some(t => t.props.children === 'server.add'));
+  const addOption = pressableWithText(tree.root, 'server.add');
   await act(async () => { addOption.props.onPress(); });
-  const add = tree.root.findAllByType(Pressable).find(p => p.findAllByType(Text)
-    .some(t => t.props.children === 'server.save'));
+  const add = pressableWithText(tree.root, 'server.save');
   await act(async () => { await add.props.onPress(); });
   expect(NativeModules.ServerTransport.discover).not.toHaveBeenCalled();
   await act(async () => { tree.root.findByType(TextInput).props.onChangeText('https://invalid.example'); });
@@ -81,13 +90,12 @@ test('shows the configured server first and selects an existing server', async (
     await act(async () => { tree = renderer.create(<AuthContext.Provider value={{
       instance: 'https://default.example', setInstance: select, logIn: jest.fn(), logInGuest: jest.fn(),
     }}><Login /></AuthContext.Provider>); });
-    const open = tree.root.findAllByType(Pressable).find(p => p.props.accessibilityLabel === 'server.label');
+    const open = pressableWithLabel(tree.root, 'server.label');
     await act(async () => { open.props.onPress(); });
     const options = tree.root.findAllByType(Text).filter(t =>
       typeof t.props.children === 'string' && t.props.children.includes('.example'));
     expect(options[0].props.children).toContain('https://default.example');
-    const other = tree.root.findAllByType(Pressable).find(p => p.findAllByType(Text)
-      .some(t => t.props.children === 'https://other.example'));
+    const other = pressableWithText(tree.root, 'https://other.example');
     await act(async () => { other.props.onPress(); });
     expect(select).toHaveBeenCalledWith('https://other.example');
     expect(tree.root.findAllByType(TextInput)).toHaveLength(0);
@@ -105,12 +113,10 @@ test('a generic OK response without the login endpoint signature is rejected', a
   await act(async () => { tree = renderer.create(<AuthContext.Provider value={{
     instance: 'https://default.example', setInstance: select, logIn: jest.fn(), logInGuest: jest.fn(),
   }}><Login /></AuthContext.Provider>); });
-  await act(async () => { tree.root.findAllByType(Pressable).find(p => p.props.accessibilityLabel === 'server.label').props.onPress(); });
-  await act(async () => { tree.root.findAllByType(Pressable).find(p => p.findAllByType(Text)
-    .some(t => t.props.children === 'server.add')).props.onPress(); });
+  await act(async () => { pressableWithLabel(tree.root, 'server.label').props.onPress(); });
+  await act(async () => { pressableWithText(tree.root, 'server.add').props.onPress(); });
   await act(async () => { tree.root.findByType(TextInput).props.onChangeText('https://other.example'); });
-  await act(async () => { await tree.root.findAllByType(Pressable).find(p => p.findAllByType(Text)
-    .some(t => t.props.children === 'server.save')).props.onPress(); });
+  await act(async () => { await pressableWithText(tree.root, 'server.save').props.onPress(); });
   expect(select).not.toHaveBeenCalled();
   expect(AsyncStorage.setItem).not.toHaveBeenCalled();
   await act(async () => tree.unmount());
@@ -124,15 +130,12 @@ test('closing the server dialog cancels validation and ignores a late response',
   await act(async () => { tree = renderer.create(<AuthContext.Provider value={{
     instance: 'https://default.example', setInstance: select, logIn: jest.fn(), logInGuest: jest.fn(),
   }}><Login /></AuthContext.Provider>); });
-  await act(async () => { tree.root.findAllByType(Pressable).find(p => p.props.accessibilityLabel === 'server.label').props.onPress(); });
-  await act(async () => { tree.root.findAllByType(Pressable).find(p => p.findAllByType(Text)
-    .some(t => t.props.children === 'server.add')).props.onPress(); });
+  await act(async () => { pressableWithLabel(tree.root, 'server.label').props.onPress(); });
+  await act(async () => { pressableWithText(tree.root, 'server.add').props.onPress(); });
   await act(async () => { tree.root.findByType(TextInput).props.onChangeText('https://other.example'); });
   let pending;
-  await act(async () => { pending = tree.root.findAllByType(Pressable).find(p => p.findAllByType(Text)
-    .some(t => t.props.children === 'server.save')).props.onPress(); });
-  await act(async () => { tree.root.findAllByType(Pressable).find(p => p.findAllByType(Text)
-    .some(t => t.props.children === 'ok')).props.onPress(); });
+  await act(async () => { pending = pressableWithText(tree.root, 'server.save').props.onPress(); });
+  await act(async () => { pressableWithText(tree.root, 'ok').props.onPress(); });
   expect(NativeModules.ServerTransport.cancelDiscovery).toHaveBeenCalledTimes(1);
   await act(async () => { resolveRequest({ status: 200, body: JSON.stringify({ openapi:'3', paths: {
     '/api/user/login': { post: {} }, '/api/user/profile': { get: {} },
@@ -149,8 +152,7 @@ test('does not navigate when guest initialization fails', async () => {
     instance: 'https://default.example', setInstance: jest.fn(), logIn: jest.fn(),
     logInGuest: jest.fn(async () => { throw new Error('context unavailable'); }),
   }}><Login /></AuthContext.Provider>); });
-  const guest = tree.root.findAllByType(Pressable).find(p => p.findAllByType(Text)
-    .some(t => t.props.children === 'login.guest'));
+  const guest = pressableWithText(tree.root, 'login.guest');
   await act(async () => { await guest.props.onPress(); });
   expect(router.replace).not.toHaveBeenCalled();
   expect(router.push).not.toHaveBeenCalled();
@@ -168,9 +170,8 @@ test('deduplicates configured and saved URLs after normalization', async () => {
     await act(async () => { tree = renderer.create(<AuthContext.Provider value={{
       instance: 'https://default.example', setInstance: jest.fn(), logIn: jest.fn(), logInGuest: jest.fn(),
     }}><Login /></AuthContext.Provider>); });
-    await act(async () => { tree.root.findAllByType(Pressable).find(p => p.props.accessibilityLabel === 'server.label').props.onPress(); });
-    const options = tree.root.findAllByType(Pressable).filter(p => p.findAllByType(Text)
-      .some(t => typeof t.props.children === 'string' && t.props.children.startsWith('server.official —')));
+    await act(async () => { pressableWithLabel(tree.root, 'server.label').props.onPress(); });
+    const options = tree.root.findAllByType(Text).filter(t => typeof t.props.children === 'string' && t.props.children.startsWith('server.official —'));
     expect(options).toHaveLength(1);
   } finally {
     if (previous === undefined) delete process.env.EXPO_PUBLIC_API_URI;

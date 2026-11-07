@@ -1,5 +1,5 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import { uuid } from 'expo-modules-core';
+import uuid from 'react-native-uuid';
 import { normalizeServerUrl } from '../utils/servers';
 
 const KEY = 'offline_server_ids_v1';

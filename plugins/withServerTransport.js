@@ -5,11 +5,27 @@ const path = require('path');
 module.exports = function withServerTransport(config) {
   const androidPackage = config.android?.package || 'com.sunesis.inatrace';
   config = withMainApplication(config, result => {
-    const marker = 'packages.add(ServerTransportPackage())';
-    if (!result.modResults.contents.includes(marker)) {
-      const anchor = 'val packages = PackageList(this).packages';
-      if (!result.modResults.contents.includes(anchor)) throw new Error('Cannot register ServerTransportPackage');
-      result.modResults.contents = result.modResults.contents.replace(anchor, `${anchor}\n            ${marker}`);
+    const legacyMarker = 'packages.add(ServerTransportPackage())';
+    const modernMarker = 'add(ServerTransportPackage())';
+    const legacyAnchor = 'val packages = PackageList(this).packages';
+    const modernAnchor = 'PackageList(this).packages.apply {';
+
+    if (result.modResults.contents.includes(legacyMarker) || result.modResults.contents.includes(modernMarker)) {
+      return result;
+    }
+
+    if (result.modResults.contents.includes(modernAnchor)) {
+      result.modResults.contents = result.modResults.contents.replace(
+        modernAnchor,
+        `${modernAnchor}\n          ${modernMarker}`
+      );
+    } else if (result.modResults.contents.includes(legacyAnchor)) {
+      result.modResults.contents = result.modResults.contents.replace(
+        legacyAnchor,
+        `${legacyAnchor}\n            ${legacyMarker}`
+      );
+    } else {
+      throw new Error('Cannot register ServerTransportPackage');
     }
     return result;
   });

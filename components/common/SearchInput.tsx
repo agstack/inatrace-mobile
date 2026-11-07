@@ -6,7 +6,7 @@ import {
   BottomSheetBackdrop,
   BottomSheetModal,
   BottomSheetView,
-} from '@gorhom/bottom-sheet';
+} from '@/components/common/AppBottomSheet';
 import { useCallback, useMemo, useRef } from 'react';
 import Selector from './Selector';
 

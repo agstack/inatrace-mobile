@@ -22,14 +22,15 @@ import {
   Undo2,
 } from 'lucide-react-native';
 import i18n from '@/locales/i18n';
-import { Position } from '@rnmapbox/maps/lib/typescript/src/types/Position';
+import type { Camera as CameraRef } from '@rnmapbox/maps';
 import Colors from '@/constants/Colors';
 import MarkerSvg from '../svg/MarkerSvg';
-import { CameraRef } from '@rnmapbox/maps/lib/typescript/src/components/Camera';
+
+type Position = [number, number] | number[];
 import cn from '@/utils/cn';
 import { router, useNavigation, useSegments } from 'expo-router';
 import { AuthContext } from '@/context/AuthContext';
-import { uuid } from 'expo-modules-core';
+import uuid from 'react-native-uuid';
 import { FeatureInfo, Plot } from '@/types/plot';
 import realm from '@/realm/useRealm';
 import { PlotSchema } from '@/realm/schemas';
@@ -93,7 +94,7 @@ export default function MapView({
   const [draggableMarkerCoordinate, setDraggableMarkerCoordinate] =
     useState<Position | null>(null);
 
-  const navigation = useNavigation();
+  const navigation = useNavigation<any>();
 
   const segments = useSegments();
 

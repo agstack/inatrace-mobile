@@ -21,14 +21,14 @@ import {
   Platform,
 } from 'react-native';
 import Mapbox from '@rnmapbox/maps';
+import AppModal from '@/components/common/AppModal';
 import i18n from '@/locales/i18n';
 import * as Location from 'expo-location';
 import { LocationObject } from 'expo-location';
 import { Input } from '@/components/common/Input';
-import Modal from 'react-native-modalbox';
 import { AuthContext } from '@/context/AuthContext';
 import cn from '@/utils/cn';
-import { CameraRef } from '@rnmapbox/maps/lib/typescript/src/components/Camera';
+import type { Camera as CameraRef } from '@rnmapbox/maps';
 import Colors from '@/constants/Colors';
 
 Mapbox.setAccessToken(process.env.EXPO_PUBLIC_MAPBOX_ACCESS_TOKEN ?? '');
@@ -235,17 +235,11 @@ export default function MapDownload() {
 
   return (
     <KeyboardAvoidingView className="h-full bg-White" behavior="padding">
-      <Modal
-        isOpen={downloadConfirm}
-        onClosed={() => setDownloadConfirm(false)}
-        position={'center'}
-        backdropPressToClose={true}
+      <AppModal
+        visible={downloadConfirm}
+        onClose={() => setDownloadConfirm(false)}
         style={{
           height: 200,
-          width: '90%',
-          marginRight: 250,
-          borderRadius: 8,
-          padding: 20,
           justifyContent: 'space-between',
         }}
       >
@@ -288,7 +282,7 @@ export default function MapDownload() {
             </Text>
           </Pressable>
         </View>
-      </Modal>
+      </AppModal>
       {selectingMap ? (
         <View className="flex-1 h-full">
           <View className="flex flex-row justify-center items-center p-5 w-full bg-White">

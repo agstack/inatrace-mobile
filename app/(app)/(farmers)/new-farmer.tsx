@@ -10,13 +10,13 @@ import {
   BottomSheetBackdrop,
   BottomSheetModal,
   BottomSheetScrollView,
-} from '@gorhom/bottom-sheet';
+} from '@/components/common/AppBottomSheet';
 import { useNavigation } from 'expo-router';
 import { ChevronLeft, PlusCircle, XCircle } from 'lucide-react-native';
 import { useCallback, useContext, useEffect, useRef, useState } from 'react';
 import { View, Text, Pressable, Alert, Platform } from 'react-native';
 import { KeyboardAwareScrollView } from 'react-native-keyboard-aware-scroll-view';
-import { uuid } from 'expo-modules-core';
+import uuid from 'react-native-uuid';
 import realm from '@/realm/useRealm';
 import { FarmerSchema } from '@/realm/schemas';
 import { RequestParams } from '@/types/auth';

@@ -27,7 +27,7 @@ import {
   BottomSheetBackdrop,
   BottomSheetModal,
   BottomSheetScrollView,
-} from '@gorhom/bottom-sheet';
+} from '@/components/common/AppBottomSheet';
 import { FullWindowOverlay } from 'react-native-screens';
 import Selector from '@/components/common/Selector';
 import { User } from '@/types/user';

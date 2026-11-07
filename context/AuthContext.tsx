@@ -3,13 +3,13 @@ import { useStorageState } from './useStorageState';
 import { User } from '@/types/user';
 import NetInfo, { NetInfoState } from '@react-native-community/netinfo';
 import axios from 'axios';
-import RNFetchBlob from 'rn-fetch-blob';
+import ReactNativeBlobUtil from 'react-native-blob-util';
 
 import { LogInResponse, RequestParams } from '@/types/auth';
 import { Farmer, ProductType, ProductTypeWithCompanyId } from '@/types/farmer';
 import { CompanyInfo } from '@/types/company';
 import { Country } from '@/types/country';
-import { uuid } from 'expo-modules-core';
+import uuid from 'react-native-uuid';
 import { Plot } from '@/types/plot';
 import { decode } from 'base-64';
 import realm from '@/realm/useRealm';
@@ -526,7 +526,7 @@ export function SessionProvider(props: React.PropsWithChildren<any>) {
 
 const downloadImageToFileSystem = async (url: string, accessToken: string, contextPath: string) => {
   try {
-    const { config, fs } = RNFetchBlob;
+    const { config, fs } = ReactNativeBlobUtil;
     const imageCacheDir = `${fs.dirs.CacheDir}/inatrace_images_${contextPath}`;
     let job = imageDirectoryJobs.get(imageCacheDir);
     if (!job) {

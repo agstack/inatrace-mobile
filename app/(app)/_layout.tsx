@@ -6,7 +6,10 @@ import { AuthContext } from '@/context/AuthContext';
 import i18n from '@/locales/i18n';
 
 import Mapbox from '@rnmapbox/maps';
-import OfflinePack from '@rnmapbox/maps/lib/typescript/src/modules/offline/OfflinePack';
+
+type OfflinePack = NonNullable<
+  Awaited<ReturnType<typeof Mapbox.offlineManager.getPack>>
+>;
 import { ChevronLeft } from 'lucide-react-native';
 import Colors from '@/constants/Colors';
 

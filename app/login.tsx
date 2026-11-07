@@ -16,12 +16,12 @@ import {
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
-import Modal from 'react-native-modalbox';
 import LanguageSwitcher from '@/components/settings/LanguageSwitcher';
 import { ChevronDown, Globe, Plus, X } from 'lucide-react-native';
 
 import i18n from '@/locales/i18n';
 import { Input, InputPassword } from '@/components/common/Input';
+import AppModal from '@/components/common/AppModal';
 import { useState, useContext, useEffect, useRef } from 'react';
 import { isCompatibleLoginProbe, isCompatibleOpenApi, isCompatiblePublicResponse, normalizeServerUrl } from '@/utils/servers';
 
@@ -191,17 +191,11 @@ export default function Login() {
     <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
       <View className="flex flex-col justify-between h-full bg-White">
         {askLanguage && (
-          <Modal
-            isOpen={askLanguage}
-            onClosed={() => setAskLanguage(false)}
-            position={'center'}
-            backdropPressToClose={true}
+          <AppModal
+            visible={askLanguage}
+            onClose={() => setAskLanguage(false)}
             style={{
               height: 336,
-              width: '90%',
-              marginRight: 250,
-              borderRadius: 8,
-              padding: 20,
               justifyContent: 'space-between',
             }}
           >
@@ -223,20 +217,14 @@ export default function Login() {
                 <Text className="text-center text-white">{i18n.t('ok')}</Text>
               </Pressable>
             </View>
-          </Modal>
+          </AppModal>
         )}
         {instanceChange && (
-          <Modal
-            isOpen={instanceChange}
-            onClosed={() => { cancelValidation(); setInstanceChange(false); setAddingServer(false); setServerError(''); }}
-            position={'center'}
-            backdropPressToClose={true}
+          <AppModal
+            visible={instanceChange}
+            onClose={() => { cancelValidation(); setInstanceChange(false); setAddingServer(false); setServerError(''); }}
             style={{
               height: '75%',
-              width: '90%',
-              marginRight: 250,
-              borderRadius: 8,
-              padding: 20,
               justifyContent: 'space-between',
             }}
           >
@@ -313,7 +301,7 @@ export default function Login() {
                 <Text className="text-center text-white">{i18n.t('ok')}</Text>
               </Pressable>
             </View>
-          </Modal>
+          </AppModal>
         )}
         <LoginUpperBlobSvg />
         <SafeAreaView className="px-5">
