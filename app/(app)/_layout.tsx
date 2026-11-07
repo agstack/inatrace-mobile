@@ -70,6 +70,13 @@ export default function AppLayout() {
   };
 
   const checkForOfflineMaps = async () => {
+    // Only offer the offline-map onboarding from the entry screen. Running
+    // this on every segment change would override navigations such as the
+    // plot form after Save plot shape.
+    if (segments.length > 1) {
+      return;
+    }
+
     try {
       const packs: OfflinePack[] = await Mapbox.offlineManager.getPacks();
       if (packs.length === 0 && !hasNavigatedToMapDownload.current) {
