@@ -322,15 +322,17 @@ const ItemSelect = ({ item, isLast }: { item: ItemProps; isLast: boolean }) => {
 
   return (
     <View className="">
-      <View
+      <Pressable
+        onPress={handlePresentModalPress}
+        hitSlop={8}
+        accessibilityRole="button"
         className={cn(
           'flex flex-row items-center justify-between py-2 ml-4 pr-4 border-b border-b-LightGray',
           isLast && 'border-b-0'
         )}
       >
         <Text className="text-[16px] mr-3 max-w-[45%]">{item.name}</Text>
-        <Pressable
-          onPress={handlePresentModalPress}
+        <View
           className={cn(
             'flex flex-row items-center flex-shrink px-2 py-1 border-b border-b-LightGray',
             item.error && 'border-b-red-500'
@@ -349,8 +351,8 @@ const ItemSelect = ({ item, isLast }: { item: ItemProps; isLast: boolean }) => {
             color={item.error ? Colors.red : Colors.darkGray}
             style={{ marginLeft: 8 }}
           />
-        </Pressable>
-      </View>
+        </View>
+      </Pressable>
 
       <BottomSheetModal
         ref={bottomSheetRef}
