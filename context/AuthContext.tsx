@@ -73,14 +73,20 @@ export const AuthContext = createContext<{
 });
 
 const isTokenExpired = (token: string): boolean => {
+  // The local backend can issue an opaque token instead of a JWT. There is
+  // no expiry to inspect in that case, so leave the session untouched instead
+  // of surfacing a decoding error in LogBox.
+  if (!token || token.split('.').length !== 3) {
+    return false;
+  }
+
   try {
     const payload = JSON.parse(decode(token.split('.')[1]));
     const expirationDate = new Date(payload.exp * 1000);
     const currentDate = new Date();
 
     return expirationDate < currentDate;
-  } catch (error) {
-    console.error('Error decoding token:', error);
+  } catch {
     return false;
   }
 };
