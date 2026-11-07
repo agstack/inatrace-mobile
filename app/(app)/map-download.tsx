@@ -27,6 +27,7 @@ import * as Location from 'expo-location';
 import { LocationObject } from 'expo-location';
 import { Input } from '@/components/common/Input';
 import { AuthContext } from '@/context/AuthContext';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import cn from '@/utils/cn';
 import type { Camera as CameraRef } from '@rnmapbox/maps';
 import Colors from '@/constants/Colors';
@@ -43,6 +44,7 @@ type OfflinePack = {
 
 export default function MapDownload() {
   const navigation = useNavigation();
+  const insets = useSafeAreaInsets();
 
   const { isConnected } = useContext(AuthContext) as { isConnected: boolean };
 
@@ -335,7 +337,10 @@ export default function MapDownload() {
               size: estimatedSize,
             })}
           </Text>
-          <View className="flex flex-row justify-between items-center px-5 pb-5 bg-White">
+          <View
+            className="flex flex-row justify-between items-center px-5 pb-5 bg-White"
+            style={{ paddingBottom: Math.max(insets.bottom, 48) }}
+          >
             <Pressable
               className="flex absolute right-5 bottom-32 flex-row justify-center items-center self-end mb-5 w-16 h-16 rounded-full border-2 border-blue-500 bg-White"
               onPress={focusOnCurrentLocation}

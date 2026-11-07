@@ -629,6 +629,17 @@ export default function MapView({
               setIsMapLoading(false);
               focusOnLocation();
             }}
+            onPress={(event: any) => {
+              const coordinates = event?.geometry?.coordinates;
+              if (
+                manualMode &&
+                Array.isArray(coordinates) &&
+                typeof coordinates[0] === 'number' &&
+                typeof coordinates[1] === 'number'
+              ) {
+                setDraggableMarkerCoordinate([coordinates[0], coordinates[1]]);
+              }
+            }}
             styleURL={Mapbox.StyleURL.SatelliteStreet}
             style={{
               height: Dimensions.get('window').height,

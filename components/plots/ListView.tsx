@@ -354,7 +354,7 @@ export default function ListView({
   const exportPlots = async () => {
     if (!selectedFarmer) return;
 
-    const filePath = `${RNFS.DocumentDirectoryPath}/${selectedFarmer.id}_plots.geojson`;
+    const filePath = `${RNFS.CachesDirectoryPath}/${selectedFarmer.id}_plots.geojson`;
 
     try {
       const plotsJson = JSON.stringify(featureCollection);
