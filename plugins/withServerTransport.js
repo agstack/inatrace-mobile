@@ -3,6 +3,7 @@ const fs = require('fs');
 const path = require('path');
 
 module.exports = function withServerTransport(config) {
+  const androidPackage = config.android?.package || 'com.sunesis.inatrace';
   config = withMainApplication(config, result => {
     const marker = 'packages.add(ServerTransportPackage())';
     if (!result.modResults.contents.includes(marker)) {
@@ -13,10 +14,13 @@ module.exports = function withServerTransport(config) {
     return result;
   });
   return withDangerousMod(config, ['android', async result => {
-    const dest = path.join(result.modRequest.platformProjectRoot, 'app/src/main/java/com/sunesis/inatrace');
+    const packagePath = androidPackage.replace(/\./g, path.sep);
+    const dest = path.join(result.modRequest.platformProjectRoot, 'app/src/main/java', packagePath);
     fs.mkdirSync(dest, { recursive: true });
     for (const file of ['ServerTransport.kt', 'ServerTransportPackage.kt']) {
-      fs.copyFileSync(path.join(__dirname, 'server-transport', file), path.join(dest, file));
+      const source = fs.readFileSync(path.join(__dirname, 'server-transport', file), 'utf8');
+      const namespacedSource = source.replace(/^package\s+[\w.]+/m, `package ${androidPackage}`);
+      fs.writeFileSync(path.join(dest, file), namespacedSource);
     }
     return result;
   }]);
