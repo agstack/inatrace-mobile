@@ -378,7 +378,22 @@ export default function ListView({
               type: 'application/json',
               filename: `${selectedFarmer.id}_plots.geojson`,
             };
-            await Share.open(shareOptions);
+            try {
+              await Share.open(shareOptions);
+            } catch (error: any) {
+              if (error?.message !== 'User did not share') {
+                Alert.alert(
+                  i18n.t('plots.exportError'),
+                  i18n.t('plots.exportErrorMessage')
+                );
+              }
+            } finally {
+              try {
+                await RNFS.unlink(filePath);
+              } catch (unlinkError) {
+                console.error('Failed to delete file:', unlinkError);
+              }
+            }
           },
         },
         {
