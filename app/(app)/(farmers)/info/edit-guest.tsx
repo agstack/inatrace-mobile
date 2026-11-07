@@ -310,6 +310,7 @@ export default function EditGuestFarmer() {
       id: farmer.id ?? '',
       name: farmer.name ?? '',
       surname: farmer.surname ?? '',
+      farmerCompanyInternalId: farmer.farmerCompanyInternalId ?? '',
       phone: farmer.phone ?? '',
       email: farmer.email ?? '',
       hasSmartphone: farmer.hasSmartphone ?? false,

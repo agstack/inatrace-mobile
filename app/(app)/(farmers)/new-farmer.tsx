@@ -322,6 +322,7 @@ export default function NewFarmer() {
       type: 'FARMER',
       name: farmer.name ?? '',
       surname: farmer.surname ?? '',
+      farmerCompanyInternalId: farmer.farmerCompanyInternalId ?? '',
       phone: farmer.phone ?? '',
       email: farmer.email ?? '',
       hasSmartphone: farmer.hasSmartphone ?? false,
