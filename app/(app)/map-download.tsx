@@ -339,7 +339,7 @@ export default function MapDownload() {
           </Text>
           <View
             className="flex flex-row justify-between items-center px-5 pb-5 bg-White"
-            style={{ paddingBottom: Math.max(insets.bottom, 48) }}
+            style={{ paddingBottom: Math.max(insets.bottom + 72, 112) }}
           >
             <Pressable
               className="flex absolute right-5 bottom-32 flex-row justify-center items-center self-end mb-5 w-16 h-16 rounded-full border-2 border-blue-500 bg-White"

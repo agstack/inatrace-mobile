@@ -18,6 +18,7 @@ import {
   Platform,
 } from 'react-native';
 import { ScrollView } from 'react-native-gesture-handler';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import realm from '@/realm/useRealm';
 import { FarmerSchema, PlotSchema } from '@/realm/schemas';
 import i18n from '@/locales/i18n';
@@ -38,6 +39,7 @@ import { copyLegacyPending, legacyPendingCounts } from '@/realm/legacyRecovery';
 
 export default function DataSync() {
   const navigation = useNavigation();
+  const insets = useSafeAreaInsets();
   const {
     isConnected,
     makeRequest,
@@ -520,7 +522,8 @@ export default function DataSync() {
             </BottomSheetScrollView>
           </BottomSheetModal>
           <Pressable
-            className="pb-5 bg-White"
+            className="bg-White"
+            style={{ paddingBottom: Math.max(insets.bottom, 16) + 8 }}
             onPress={syncData}
             disabled={
               syncing || !isConnected ||
