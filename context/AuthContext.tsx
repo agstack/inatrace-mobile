@@ -118,7 +118,9 @@ export function SessionProvider(props: React.PropsWithChildren<any>) {
   const [guestAccess, setGuestAccess] = useState<boolean>(false);
 
   const setInstance = (value: string) => {
-    if (guestAccess || (accessToken && accessToken !== 'none')) return;
+    // The login screen must be able to switch servers before authentication.
+    // Only an authenticated session is pinned to its current server.
+    if (accessToken && accessToken !== 'none') return;
     void setStoredInstance(value);
   };
 
