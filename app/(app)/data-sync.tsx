@@ -117,14 +117,13 @@ export default function DataSync() {
         undefined,
         `(userId == '${user?.id}' OR userId == '0')`
       )) as any;
-      const plots = (await realm.realmRead(
-        PlotSchema,
-        undefined,
-        undefined,
-        undefined,
-        undefined,
-        `(synced == false) AND (userId == '${user?.id}' OR userId == '0')`
-      )) as any;
+      // Read the small local plot set and filter in JS so this check stays
+      // consistent with how the plot list selects the current account.
+      const allPlots = (await realm.realmRead(PlotSchema)) as any;
+      const plots = allPlots.filter(
+        (plot: any) =>
+          plot.userId === String(user?.id) || plot.userId === '0'
+      );
 
       let farmersDataSynced: any = [];
       let farmersData: any = [];
@@ -140,6 +139,8 @@ export default function DataSync() {
       }
 
       for (const plot of plots) {
+        if (plot.synced) continue;
+
         const data = JSON.parse(plot.data);
 
         plotsData.push({ ...plot, data });
