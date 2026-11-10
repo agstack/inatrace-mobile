@@ -1,4 +1,4 @@
-const { withMainApplication, withDangerousMod } = require('@expo/config-plugins');
+const { withMainApplication, withDangerousMod, withXcodeProject, IOSConfig } = require('@expo/config-plugins');
 const fs = require('fs');
 const path = require('path');
 
@@ -29,7 +29,7 @@ module.exports = function withServerTransport(config) {
     }
     return result;
   });
-  return withDangerousMod(config, ['android', async result => {
+  config = withDangerousMod(config, ['android', async result => {
     const packagePath = androidPackage.replace(/\./g, path.sep);
     const dest = path.join(result.modRequest.platformProjectRoot, 'app/src/main/java', packagePath);
     fs.mkdirSync(dest, { recursive: true });
@@ -40,4 +40,20 @@ module.exports = function withServerTransport(config) {
     }
     return result;
   }]);
+  config = withDangerousMod(config, ['ios', async result => {
+    const name = IOSConfig.XcodeUtils.getProjectName(result.modRequest.projectRoot);
+    const dest = path.join(result.modRequest.platformProjectRoot, name, 'ServerTransport.m');
+    fs.copyFileSync(path.join(__dirname, 'server-transport', 'ServerTransport.m'), dest);
+    return result;
+  }]);
+  return withXcodeProject(config, result => {
+    const name = IOSConfig.XcodeUtils.getProjectName(result.modRequest.projectRoot);
+    const filename = `${name}/ServerTransport.m`;
+    if (!result.modResults.hasFile(filename)) {
+      const group = result.modResults.findPBXGroupKey({ name }) || result.modResults.findPBXGroupKey({ path: name });
+      if (!group) throw new Error('Cannot find iOS application group for ServerTransport');
+      result.modResults.addSourceFile(filename, { target: result.modResults.getFirstTarget().uuid }, group);
+    }
+    return result;
+  });
 };
