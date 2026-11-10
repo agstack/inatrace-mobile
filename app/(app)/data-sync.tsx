@@ -18,6 +18,7 @@ import {
   Platform,
 } from 'react-native';
 import { ScrollView } from 'react-native-gesture-handler';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import realm from '@/realm/useRealm';
 import { FarmerSchema, PlotSchema } from '@/realm/schemas';
 import i18n from '@/locales/i18n';
@@ -27,7 +28,7 @@ import {
   BottomSheetBackdrop,
   BottomSheetModal,
   BottomSheetScrollView,
-} from '@gorhom/bottom-sheet';
+} from '@/components/common/AppBottomSheet';
 import { FullWindowOverlay } from 'react-native-screens';
 import Selector from '@/components/common/Selector';
 import { User } from '@/types/user';
@@ -38,6 +39,7 @@ import { copyLegacyPending, legacyPendingCounts } from '@/realm/legacyRecovery';
 
 export default function DataSync() {
   const navigation = useNavigation();
+  const insets = useSafeAreaInsets();
   const {
     isConnected,
     makeRequest,
@@ -117,14 +119,13 @@ export default function DataSync() {
         undefined,
         `(userId == '${user?.id}' OR userId == '0')`
       )) as any;
-      const plots = (await realm.realmRead(
-        PlotSchema,
-        undefined,
-        undefined,
-        undefined,
-        undefined,
-        `(synced == false) AND (userId == '${user?.id}' OR userId == '0')`
-      )) as any;
+      // Read the small local plot set and filter in JS so this check stays
+      // consistent with how the plot list selects the current account.
+      const allPlots = (await realm.realmRead(PlotSchema)) as any;
+      const plots = allPlots.filter(
+        (plot: any) =>
+          plot.userId === String(user?.id) || plot.userId === '0'
+      );
 
       let farmersDataSynced: any = [];
       let farmersData: any = [];
@@ -140,6 +141,8 @@ export default function DataSync() {
       }
 
       for (const plot of plots) {
+        if (plot.synced) continue;
+
         const data = JSON.parse(plot.data);
 
         plotsData.push({ ...plot, data });
@@ -519,7 +522,8 @@ export default function DataSync() {
             </BottomSheetScrollView>
           </BottomSheetModal>
           <Pressable
-            className="pb-5 bg-White"
+            className="bg-White"
+            style={{ paddingBottom: Math.max(insets.bottom, 16) + 8 }}
             onPress={syncData}
             disabled={
               syncing || !isConnected ||

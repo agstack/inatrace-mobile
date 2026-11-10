@@ -1,7 +1,7 @@
 import { View, Text, Pressable, Linking } from 'react-native';
 import { X } from 'lucide-react-native';
-import Modal from 'react-native-modalbox';
 import i18n from '@/locales/i18n';
+import AppModal from '@/components/common/AppModal';
 import { useContext } from 'react';
 import { AuthContext } from '@/context/AuthContext';
 import Colors from '@/constants/Colors';
@@ -23,17 +23,11 @@ export default function DocumentationModal() {
   return (
     <>
       {documentationModal && (
-        <Modal
-          isOpen={documentationModal}
-          onClosed={() => setDocumentationModal(false)}
-          position={'center'}
-          backdropPressToClose={true}
+        <AppModal
+          visible={documentationModal}
+          onClose={() => setDocumentationModal(false)}
           style={{
             height: 160,
-            width: '90%',
-            marginRight: 250,
-            borderRadius: 8,
-            padding: 20,
             justifyContent: 'space-between',
           }}
         >
@@ -62,7 +56,7 @@ export default function DocumentationModal() {
               </Text>
             </Pressable>
           </View>
-        </Modal>
+        </AppModal>
       )}
     </>
   );

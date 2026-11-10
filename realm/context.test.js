@@ -5,9 +5,9 @@ jest.mock('@react-native-async-storage/async-storage', () => {
     setItem: jest.fn(async (key, value) => { values[key] = value; }),
   } };
 });
-jest.mock('expo-modules-core', () => {
+jest.mock('react-native-uuid', () => {
   let sequence = 0;
-  return { uuid: { v4: () => `server-${++sequence}` } };
+  return { __esModule: true, default: { v4: () => `server-${++sequence}` } };
 });
 
 import { clearOfflineContext, currentOfflinePath, selectOfflineContext } from './context';

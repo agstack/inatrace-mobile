@@ -1,5 +1,5 @@
 import React from 'react';
-import { Pressable, Text } from 'react-native';
+import { Text } from 'react-native';
 import renderer, { act } from 'react-test-renderer';
 import DataSync from '../app/(app)/data-sync';
 import { AuthContext } from '@/context/AuthContext';
@@ -7,6 +7,9 @@ import realm from '@/realm/useRealm';
 import http from 'http';
 
 jest.mock('expo-router', () => ({ useNavigation: () => ({ setOptions: jest.fn(), goBack: jest.fn() }) }));
+jest.mock('react-native-safe-area-context', () => ({
+  useSafeAreaInsets: () => ({ top: 0, right: 0, bottom: 0, left: 0 }),
+}));
 jest.mock('@/context/AuthContext', () => ({ AuthContext: require('react').createContext({}) }));
 jest.mock('@/locales/i18n', () => ({ t: key => key }));
 jest.mock('@/realm/useRealm', () => ({ __esModule: true, default: {
@@ -16,7 +19,7 @@ jest.mock('@/realm/context', () => ({ currentOfflinePath: () => 'server-b-user-1
 jest.mock('@/utils/sessionRequests', () => ({ sessionGeneration: () => 1, isCurrentSession: () => true }));
 jest.mock('@/realm/legacyRecovery', () => ({ legacyPendingCounts: async () => ({ farmers: 0, plots: 0 }), copyLegacyPending: jest.fn() }));
 jest.mock('react-native-gesture-handler', () => ({ ScrollView: require('react-native').ScrollView }));
-jest.mock('@gorhom/bottom-sheet', () => ({ BottomSheetBackdrop: () => null, BottomSheetModal: () => null,
+jest.mock('@/components/common/AppBottomSheet', () => ({ BottomSheetBackdrop: () => null, BottomSheetModal: () => null,
   BottomSheetScrollView: ({ children }) => children }));
 jest.mock('react-native-screens', () => ({ FullWindowOverlay: ({ children }) => children }));
 jest.mock('@/components/common/Selector', () => () => null);
@@ -34,7 +37,7 @@ test('synchronizes only pending records read from the active context', async () 
     isConnected: true, makeRequest: send, selectedCompany: 2, user: { id: 1 },
     guestAccess: false, instance: 'https://server-b.example', refreshFarmers: jest.fn(),
   }}><DataSync /></AuthContext.Provider>); });
-  const sync = tree.root.findAllByType(Pressable).find(p => p.findAllByType(Text)
+  const sync = tree.root.findAll(node => typeof node.props?.onPress === 'function').find(p => p.findAllByType(Text)
     .some(t => t.props.children === 'home.syncData'));
   await act(async () => { await sync.props.onPress(); });
   expect(send).toHaveBeenCalledTimes(1);
@@ -55,7 +58,7 @@ test('keeps the pending record when the request fails', async () => {
     isConnected: true, makeRequest: send, selectedCompany: 2, user: { id: 1 },
     guestAccess: false, instance: 'https://server-b.example', refreshFarmers: jest.fn(),
   }}><DataSync /></AuthContext.Provider>); });
-  const sync = tree.root.findAllByType(Pressable).find(p => p.findAllByType(Text)
+  const sync = tree.root.findAll(node => typeof node.props?.onPress === 'function').find(p => p.findAllByType(Text)
     .some(t => t.props.children === 'home.syncData'));
   await act(async () => { await sync.props.onPress(); });
   expect(send).toHaveBeenCalledTimes(1);
@@ -97,7 +100,7 @@ test('sends active-context data to a local HTTP fixture', async () => {
       isConnected: true, makeRequest: send, selectedCompany: 2, user: { id: 1 },
       guestAccess: false, instance: 'http://127.0.0.1', refreshFarmers: jest.fn(),
     }}><DataSync /></AuthContext.Provider>); });
-    const sync = tree.root.findAllByType(Pressable).find(p => p.findAllByType(Text)
+    const sync = tree.root.findAll(node => typeof node.props?.onPress === 'function').find(p => p.findAllByType(Text)
       .some(t => t.props.children === 'home.syncData'));
     await act(async () => { await sync.props.onPress(); });
     expect(received).toHaveLength(1);

@@ -7,12 +7,12 @@ import {
   ActivityIndicator,
   RefreshControl,
   Platform,
+  FlatList,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import i18n from '@/locales/i18n';
 import SearchInput from '@/components/common/SearchInput';
 import { useContext, useEffect, useState } from 'react';
-import { FlashList } from '@shopify/flash-list';
 import { AuthContext } from '@/context/AuthContext';
 import Card, { CardProps, ItemProps } from '@/components/common/Card';
 import { Farmer } from '@/types/farmer';
@@ -329,12 +329,11 @@ export default function Farmers() {
       </TouchableWithoutFeedback>
 
       <View style={{ flex: 1 }}>
-        <FlashList
+        <FlatList
           data={data}
           renderItem={({ item }) => <Card {...item} />}
-          estimatedItemSize={dataCount}
           keyExtractor={(_, index) => index.toString()}
-          className="flex flex-col h-full"
+          style={{ flex: 1 }}
           ListEmptyComponent={emptyComponent(
             isLoading ? i18n.t('loading') : i18n.t('farmers.noData')
           )}

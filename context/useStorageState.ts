@@ -1,6 +1,6 @@
 import { deleteItemAsync, setItemAsync, getItemAsync } from 'expo-secure-store';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import { useReducer, useEffect, useCallback } from 'react';
+import { useReducer, useEffect, useCallback, useRef } from 'react';
 
 type StorageValue = string | object | number | null | boolean;
 type StorageType = 'secureStore' | 'asyncStorage';
@@ -41,6 +41,7 @@ export function useStorageState<T extends StorageValue>(
   storageType: StorageType = 'secureStore'
 ): UseStateHook<T> {
   const [state, setState] = useAsyncState<T>(initialValue);
+  const didSetBeforeHydration = useRef(false);
 
   useEffect(() => {
     (async () => {
@@ -51,6 +52,9 @@ export function useStorageState<T extends StorageValue>(
         } else {
           value = await AsyncStorage.getItem(key);
         }
+        // A login/logout may set this key while the asynchronous read is
+        // still in flight. Do not let the stale stored value overwrite it.
+        if (didSetBeforeHydration.current) return;
         const parsedValue = value ? JSON.parse(value) : 'none';
         setState(parsedValue);
       } catch (error) {
@@ -61,6 +65,7 @@ export function useStorageState<T extends StorageValue>(
 
   const setValue = useCallback(
     async (value: T) => {
+      didSetBeforeHydration.current = true;
       setState(value);
       await setStorageItemAsync(key, value, storageType);
     },

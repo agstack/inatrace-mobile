@@ -21,14 +21,15 @@ import {
   Platform,
 } from 'react-native';
 import Mapbox from '@rnmapbox/maps';
+import AppModal from '@/components/common/AppModal';
 import i18n from '@/locales/i18n';
 import * as Location from 'expo-location';
 import { LocationObject } from 'expo-location';
 import { Input } from '@/components/common/Input';
-import Modal from 'react-native-modalbox';
 import { AuthContext } from '@/context/AuthContext';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import cn from '@/utils/cn';
-import { CameraRef } from '@rnmapbox/maps/lib/typescript/src/components/Camera';
+import type { Camera as CameraRef } from '@rnmapbox/maps';
 import Colors from '@/constants/Colors';
 
 Mapbox.setAccessToken(process.env.EXPO_PUBLIC_MAPBOX_ACCESS_TOKEN ?? '');
@@ -43,6 +44,7 @@ type OfflinePack = {
 
 export default function MapDownload() {
   const navigation = useNavigation();
+  const insets = useSafeAreaInsets();
 
   const { isConnected } = useContext(AuthContext) as { isConnected: boolean };
 
@@ -235,17 +237,11 @@ export default function MapDownload() {
 
   return (
     <KeyboardAvoidingView className="h-full bg-White" behavior="padding">
-      <Modal
-        isOpen={downloadConfirm}
-        onClosed={() => setDownloadConfirm(false)}
-        position={'center'}
-        backdropPressToClose={true}
+      <AppModal
+        visible={downloadConfirm}
+        onClose={() => setDownloadConfirm(false)}
         style={{
           height: 200,
-          width: '90%',
-          marginRight: 250,
-          borderRadius: 8,
-          padding: 20,
           justifyContent: 'space-between',
         }}
       >
@@ -288,7 +284,7 @@ export default function MapDownload() {
             </Text>
           </Pressable>
         </View>
-      </Modal>
+      </AppModal>
       {selectingMap ? (
         <View className="flex-1 h-full">
           <View className="flex flex-row justify-center items-center p-5 w-full bg-White">
@@ -341,7 +337,10 @@ export default function MapDownload() {
               size: estimatedSize,
             })}
           </Text>
-          <View className="flex flex-row justify-between items-center px-5 pb-5 bg-White">
+          <View
+            className="flex flex-row justify-between items-center px-5 pb-5 bg-White"
+            style={{ paddingBottom: Math.max(insets.bottom + 72, 112) }}
+          >
             <Pressable
               className="flex absolute right-5 bottom-32 flex-row justify-center items-center self-end mb-5 w-16 h-16 rounded-full border-2 border-blue-500 bg-White"
               onPress={focusOnCurrentLocation}

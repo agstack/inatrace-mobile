@@ -9,7 +9,7 @@ import {
   BottomSheetBackdrop,
   BottomSheetModal,
   BottomSheetScrollView,
-} from '@gorhom/bottom-sheet';
+} from '@/components/common/AppBottomSheet';
 import { Link, useNavigation } from 'expo-router';
 import { ChevronLeft, PlusCircle, User2, XCircle } from 'lucide-react-native';
 import {
@@ -310,6 +310,7 @@ export default function EditGuestFarmer() {
       id: farmer.id ?? '',
       name: farmer.name ?? '',
       surname: farmer.surname ?? '',
+      farmerCompanyInternalId: farmer.farmerCompanyInternalId ?? '',
       phone: farmer.phone ?? '',
       email: farmer.email ?? '',
       hasSmartphone: farmer.hasSmartphone ?? false,

@@ -6,7 +6,10 @@ import { AuthContext } from '@/context/AuthContext';
 import i18n from '@/locales/i18n';
 
 import Mapbox from '@rnmapbox/maps';
-import OfflinePack from '@rnmapbox/maps/lib/typescript/src/modules/offline/OfflinePack';
+
+type OfflinePack = NonNullable<
+  Awaited<ReturnType<typeof Mapbox.offlineManager.getPack>>
+>;
 import { ChevronLeft } from 'lucide-react-native';
 import Colors from '@/constants/Colors';
 
@@ -67,6 +70,13 @@ export default function AppLayout() {
   };
 
   const checkForOfflineMaps = async () => {
+    // Only offer the offline-map onboarding from the entry screen. Running
+    // this on every segment change would override navigations such as the
+    // plot form after Save plot shape.
+    if (segments.length > 1) {
+      return;
+    }
+
     try {
       const packs: OfflinePack[] = await Mapbox.offlineManager.getPacks();
       if (packs.length === 0 && !hasNavigatedToMapDownload.current) {

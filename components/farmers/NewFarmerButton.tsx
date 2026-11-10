@@ -5,6 +5,7 @@ import cn from '@/utils/cn';
 import { Link } from 'expo-router';
 import { Plus } from 'lucide-react-native';
 import { Pressable, View, Text } from 'react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 export default function NewFarmerButton() {
   return (
@@ -30,8 +31,15 @@ export default function NewFarmerButton() {
 }
 
 export const ButtonWrapper = ({ children }: any) => {
+  const insets = useSafeAreaInsets();
   return (
-    <View className="absolute bottom-0 w-full" style={ShadowButtonStyle}>
+    <View
+      className="absolute w-full"
+      style={[
+        ShadowButtonStyle,
+        { bottom: 0, paddingBottom: Math.max(insets.bottom, 16) },
+      ]}
+    >
       {children}
     </View>
   );

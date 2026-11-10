@@ -22,14 +22,15 @@ import {
   Undo2,
 } from 'lucide-react-native';
 import i18n from '@/locales/i18n';
-import { Position } from '@rnmapbox/maps/lib/typescript/src/types/Position';
+import type { Camera as CameraRef } from '@rnmapbox/maps';
 import Colors from '@/constants/Colors';
 import MarkerSvg from '../svg/MarkerSvg';
-import { CameraRef } from '@rnmapbox/maps/lib/typescript/src/components/Camera';
+
+type Position = [number, number] | number[];
 import cn from '@/utils/cn';
 import { router, useNavigation, useSegments } from 'expo-router';
 import { AuthContext } from '@/context/AuthContext';
-import { uuid } from 'expo-modules-core';
+import uuid from 'react-native-uuid';
 import { FeatureInfo, Plot } from '@/types/plot';
 import realm from '@/realm/useRealm';
 import { PlotSchema } from '@/realm/schemas';
@@ -93,7 +94,7 @@ export default function MapView({
   const [draggableMarkerCoordinate, setDraggableMarkerCoordinate] =
     useState<Position | null>(null);
 
-  const navigation = useNavigation();
+  const navigation = useNavigation<any>();
 
   const segments = useSegments();
 
@@ -628,6 +629,17 @@ export default function MapView({
               setIsMapLoading(false);
               focusOnLocation();
             }}
+            onPress={(event: any) => {
+              const coordinates = event?.geometry?.coordinates;
+              if (
+                manualMode &&
+                Array.isArray(coordinates) &&
+                typeof coordinates[0] === 'number' &&
+                typeof coordinates[1] === 'number'
+              ) {
+                setDraggableMarkerCoordinate([coordinates[0], coordinates[1]]);
+              }
+            }}
             styleURL={Mapbox.StyleURL.SatelliteStreet}
             style={{
               height: Dimensions.get('window').height,
@@ -915,6 +927,20 @@ export default function MapView({
               ) : (
                 <>
                   <Pressable
+                    onPress={() => setManualMode(!manualMode)}
+                    className="flex flex-row justify-center items-center px-5 py-3 mb-2 rounded-md bg-Orange"
+                  >
+                    <MapPin
+                      color={Colors.white}
+                      style={{ marginRight: 8 }}
+                      size={20}
+                    />
+                    <Text className="text-White font-semibold text-[16px]">
+                      {i18n.t('plots.addPlot.toggleManual')}
+                    </Text>
+                  </Pressable>
+
+                  <Pressable
                     onPress={addLocationToLocations}
                     className={cn(
                       'flex flex-row items-center justify-center px-5 py-3 rounded-md bg-Green',
@@ -937,23 +963,6 @@ export default function MapView({
                       {i18n.t('plots.addPlot.addCurrentLocation')}
                     </Text>
                   </Pressable>
-
-                  {location?.coords.accuracy &&
-                  location?.coords.accuracy > 10 ? (
-                    <Pressable
-                      onPress={() => setManualMode(!manualMode)}
-                      className="flex flex-row justify-center items-center px-5 py-3 mt-2 rounded-md bg-Orange"
-                    >
-                      <MapPin
-                        color={Colors.white}
-                        style={{ marginRight: 8 }}
-                        size={20}
-                      />
-                      <Text className="text-White font-semibold text-[16px]">
-                        {i18n.t('plots.addPlot.toggleManual')}
-                      </Text>
-                    </Pressable>
-                  ) : null}
 
                   <View className="flex flex-row justify-center items-center mt-2">
                     <Pressable

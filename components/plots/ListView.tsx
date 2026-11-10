@@ -1,4 +1,4 @@
-import { ActivityIndicator, Alert, Pressable, Text, View } from 'react-native';
+import { ActivityIndicator, Alert, FlatList, Pressable, Text, View } from 'react-native';
 import Clipboard from '@react-native-clipboard/clipboard';
 import Share from 'react-native-share';
 import RNFS from 'react-native-fs';
@@ -7,7 +7,6 @@ import { useContext, useEffect, useState } from 'react';
 import { Plot } from '@/types/plot';
 import { emptyComponent } from '../common/FlashListComponents';
 import Card, { CardProps, ItemProps } from '../common/Card';
-import { FlashList } from '@shopify/flash-list';
 import { AuthContext } from '@/context/AuthContext';
 import i18n from '@/locales/i18n';
 import realm from '@/realm/useRealm';
@@ -355,7 +354,7 @@ export default function ListView({
   const exportPlots = async () => {
     if (!selectedFarmer) return;
 
-    const filePath = `${RNFS.DocumentDirectoryPath}/${selectedFarmer.id}_plots.geojson`;
+    const filePath = `${RNFS.CachesDirectoryPath}/${selectedFarmer.id}_plots.geojson`;
 
     try {
       const plotsJson = JSON.stringify(featureCollection);
@@ -379,7 +378,22 @@ export default function ListView({
               type: 'application/json',
               filename: `${selectedFarmer.id}_plots.geojson`,
             };
-            await Share.open(shareOptions);
+            try {
+              await Share.open(shareOptions);
+            } catch (error: any) {
+              if (error?.message !== 'User did not share') {
+                Alert.alert(
+                  i18n.t('plots.exportError'),
+                  i18n.t('plots.exportErrorMessage')
+                );
+              }
+            } finally {
+              try {
+                await RNFS.unlink(filePath);
+              } catch (unlinkError) {
+                console.error('Failed to delete file:', unlinkError);
+              }
+            }
           },
         },
         {
@@ -449,7 +463,7 @@ export default function ListView({
         </View>
       )}
       <View style={{ flex: 1 }}>
-        <FlashList
+        <FlatList
           extraData={[loadingGeoId, isConnected]}
           data={data}
           renderItem={({ item }) => (
@@ -476,9 +490,8 @@ export default function ListView({
               <Card {...item} />
             </View>
           )}
-          estimatedItemSize={200}
           keyExtractor={(_, index) => index.toString()}
-          className="flex flex-col h-full"
+          style={{ flex: 1 }}
           ListEmptyComponent={emptyComponent(
             loading ? i18n.t('loading') : i18n.t('plots.noData')
           )}

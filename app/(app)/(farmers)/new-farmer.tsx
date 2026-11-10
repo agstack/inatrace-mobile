@@ -10,13 +10,14 @@ import {
   BottomSheetBackdrop,
   BottomSheetModal,
   BottomSheetScrollView,
-} from '@gorhom/bottom-sheet';
+} from '@/components/common/AppBottomSheet';
 import { useNavigation } from 'expo-router';
 import { ChevronLeft, PlusCircle, XCircle } from 'lucide-react-native';
 import { useCallback, useContext, useEffect, useRef, useState } from 'react';
 import { View, Text, Pressable, Alert, Platform } from 'react-native';
 import { KeyboardAwareScrollView } from 'react-native-keyboard-aware-scroll-view';
-import { uuid } from 'expo-modules-core';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import uuid from 'react-native-uuid';
 import realm from '@/realm/useRealm';
 import { FarmerSchema } from '@/realm/schemas';
 import { RequestParams } from '@/types/auth';
@@ -69,6 +70,7 @@ export default function NewFarmer() {
   const [searchedCountries, setSearchedCountries] =
     useState<Country[]>(countries);
   const navigation = useNavigation();
+  const insets = useSafeAreaInsets();
   const [farmer, setFarmer] = useState<Farmer>({} as Farmer);
   const [productTypesSelect, setProductTypesSelect] = useState<ProductType[]>(
     []
@@ -322,6 +324,7 @@ export default function NewFarmer() {
       type: 'FARMER',
       name: farmer.name ?? '',
       surname: farmer.surname ?? '',
+      farmerCompanyInternalId: farmer.farmerCompanyInternalId ?? '',
       phone: farmer.phone ?? '',
       email: farmer.email ?? '',
       hasSmartphone: farmer.hasSmartphone ?? false,
@@ -480,6 +483,9 @@ export default function NewFarmer() {
     <KeyboardAwareScrollView
       extraScrollHeight={52}
       className="h-full border-t bg-White border-t-LightGray"
+      contentContainerStyle={{
+        paddingBottom: Math.max(insets.bottom, 16) + 24,
+      }}
     >
       <Text className="text-[18px] font-medium mt-5 mx-5">
         {i18n.t('farmers.info.basicInformation.title')}

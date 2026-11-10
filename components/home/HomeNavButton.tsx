@@ -13,7 +13,7 @@ type HomeNavButtonProps = {
 
 export default function HomeNavButton(props: HomeNavButtonProps) {
   return (
-    <Link href={props.link as Href<string>} asChild>
+    <Link href={props.link as Href} asChild>
       <Pressable>
         {({ pressed }) => (
           <View

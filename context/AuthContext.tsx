@@ -3,13 +3,13 @@ import { useStorageState } from './useStorageState';
 import { User } from '@/types/user';
 import NetInfo, { NetInfoState } from '@react-native-community/netinfo';
 import axios from 'axios';
-import RNFetchBlob from 'rn-fetch-blob';
+import ReactNativeBlobUtil from 'react-native-blob-util';
 
 import { LogInResponse, RequestParams } from '@/types/auth';
 import { Farmer, ProductType, ProductTypeWithCompanyId } from '@/types/farmer';
 import { CompanyInfo } from '@/types/company';
 import { Country } from '@/types/country';
-import { uuid } from 'expo-modules-core';
+import uuid from 'react-native-uuid';
 import { Plot } from '@/types/plot';
 import { decode } from 'base-64';
 import realm from '@/realm/useRealm';
@@ -73,14 +73,20 @@ export const AuthContext = createContext<{
 });
 
 const isTokenExpired = (token: string): boolean => {
+  // The local backend can issue an opaque token instead of a JWT. There is
+  // no expiry to inspect in that case, so leave the session untouched instead
+  // of surfacing a decoding error in LogBox.
+  if (!token || token.split('.').length !== 3) {
+    return false;
+  }
+
   try {
     const payload = JSON.parse(decode(token.split('.')[1]));
     const expirationDate = new Date(payload.exp * 1000);
     const currentDate = new Date();
 
     return expirationDate < currentDate;
-  } catch (error) {
-    console.error('Error decoding token:', error);
+  } catch {
     return false;
   }
 };
@@ -118,7 +124,9 @@ export function SessionProvider(props: React.PropsWithChildren<any>) {
   const [guestAccess, setGuestAccess] = useState<boolean>(false);
 
   const setInstance = (value: string) => {
-    if (guestAccess || (accessToken && accessToken !== 'none')) return;
+    // The login screen must be able to switch servers before authentication.
+    // Only an authenticated session is pinned to its current server.
+    if (accessToken && accessToken !== 'none') return;
     void setStoredInstance(value);
   };
 
@@ -126,30 +134,38 @@ export function SessionProvider(props: React.PropsWithChildren<any>) {
     if (instance === 'none') void setStoredInstance(process.env.EXPO_PUBLIC_API_URI ?? '');
   }, [instance]);
 
-  useEffect(() => {
-    if (!guestAccess && (productTypes === null || productTypes === 'none')) {
-      setProductTypes(guestProductTypes as ProductType[]);
-    }
-
-    if (!guestAccess && (countries === null || countries === 'none')) {
-      setCountries(guestCountries as Country[]);
-    }
-  }, [productTypes, countries]);
+  // Guest defaults must not be written to storage for authenticated sessions.
+  // They were racing with the values fetched during login and overwriting them
+  // on the next app start. logInGuest sets both lists explicitly.
 
   const [isConnected, setIsConnected] = useState<boolean>(false);
   const [newPlot, setNewPlot] = useState<Plot | null>(null);
   const renderGeneration = sessionGeneration();
 
   const checkAuth = async (): Promise<boolean> => {
-    let account = user && typeof user === 'object' ? user : null;
-    let server = instance && instance !== 'none' ? instance : '';
-    if (!account) {
-      const stored = await getItemAsync('user');
-      if (stored) account = JSON.parse(stored);
+    const connected = (await NetInfo.fetch()).isConnected;
+    // A cached authenticated session must remain usable offline, but the
+    // Realm context is held in memory and has to be restored after a cold
+    // start too. Always prefer the persisted account/server: the state hooks
+    // initially contain the build-time API URI and only hydrate later, which
+    // would otherwise select a different offline Realm for the same account.
+    let account: User | null = null;
+    const storedUser = await getItemAsync('user');
+    if (storedUser) account = JSON.parse(storedUser);
+
+    let server = '';
+    const storedInstance = await getItemAsync('instance');
+    if (storedInstance) {
+      server = JSON.parse(storedInstance);
+    } else if (instance && instance !== 'none') {
+      server = instance;
     }
-    if (!server) {
-      const stored = await getItemAsync('instance');
-      if (stored) server = JSON.parse(stored);
+
+    if (!account && user && typeof user === 'object') {
+      account = user;
+    }
+    if (!server && instance && instance !== 'none') {
+      server = instance;
     }
     if (account?.id != null && server) {
       await selectOfflineContext(server, account.id);
@@ -157,7 +173,7 @@ export function SessionProvider(props: React.PropsWithChildren<any>) {
     } else if (accessToken && accessToken !== 'none') {
       return false;
     }
-    if (!(await NetInfo.fetch()).isConnected) {
+    if (!connected) {
       return true;
     }
 
@@ -526,7 +542,7 @@ export function SessionProvider(props: React.PropsWithChildren<any>) {
 
 const downloadImageToFileSystem = async (url: string, accessToken: string, contextPath: string) => {
   try {
-    const { config, fs } = RNFetchBlob;
+    const { config, fs } = ReactNativeBlobUtil;
     const imageCacheDir = `${fs.dirs.CacheDir}/inatrace_images_${contextPath}`;
     let job = imageDirectoryJobs.get(imageCacheDir);
     if (!job) {
