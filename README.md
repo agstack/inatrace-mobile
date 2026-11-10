@@ -46,7 +46,16 @@ To run the INATrace app locally, follow these steps:
     EXPO_PUBLIC_DOCUMENTATION_URI=
     EXPO_PUBLIC_MAPBOX_ACCESS_TOKEN=
     RN_MAPBOX_MAPS_DOWNLOAD_TOKEN=
+    IOS_BUNDLE_IDENTIFIER=
    ```
+
+   `IOS_BUNDLE_IDENTIFIER` is optional and selects the iOS bundle identifier
+   during Expo configuration and native project generation. If omitted, it
+   defaults to `com.sunesis.inatracemobile`. For Codemagic, configure it as an
+   environment variable, for example `org.agroecologymap.org`, and ensure it
+   matches the App ID and signing profile in the target Apple account. If an
+   iOS native project already exists, regenerate or update it before building
+   so its bundle identifier matches the selected value.
 
 4. **Start the Development Server**: Launch the Expo development server.
 

@@ -18,7 +18,7 @@ export default ({ config }) => ({
     assetBundlePatterns: ['**/*'],
     ios: {
       supportsTablet: true,
-      bundleIdentifier: 'com.sunesis.inatracemobile',
+      bundleIdentifier: process.env.IOS_BUNDLE_IDENTIFIER || 'com.sunesis.inatracemobile',
       privacyManifests: {
         NSPrivacyAccessedAPITypes: [
           {
