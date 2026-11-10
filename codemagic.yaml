@@ -69,7 +69,7 @@ workflows:
           xcrun agvtool new-version -all "$IOS_BUILD_NUMBER"
 
       - name: Configure signing profiles
-        script: xcode-project use-profiles
+        script: xcode-project use-profiles --project "$CM_BUILD_DIR/ios/INATrace.xcodeproj"
 
       - name: Build the signed IPA
         script: |
