@@ -11,3 +11,37 @@ index b2803c4..ea10692 100644
          }
      }
  }
+diff --git a/node_modules/react-native-date-picker/ios/DatePicker.m b/node_modules/react-native-date-picker/ios/DatePicker.m
+--- a/node_modules/react-native-date-picker/ios/DatePicker.m
++++ b/node_modules/react-native-date-picker/ios/DatePicker.m
+@@ -6,3 +6,3 @@
+  */
+-#import "RCTComponent.h"
++#import <React/RCTComponent.h>
+ #import "DatePicker.h"
+@@ -11,3 +11,3 @@
+ #import "UIView+React.h"
+-#import "RCTConvert.h"
++#import <React/RCTConvert.h>
+ #import "RCTView.h"
+diff --git a/node_modules/react-native-date-picker/ios/RNDatePickerManager.mm b/node_modules/react-native-date-picker/ios/RNDatePickerManager.mm
+--- a/node_modules/react-native-date-picker/ios/RNDatePickerManager.mm
++++ b/node_modules/react-native-date-picker/ios/RNDatePickerManager.mm
+@@ -5,3 +5,3 @@
+ #import "RNDatePickerManager.h"
+-#import "RCTConvert.h"
++#import <React/RCTConvert.h>
+ #import "DatePicker.h"
+diff --git a/node_modules/react-native-date-picker/ios/RNDatePicker.mm b/node_modules/react-native-date-picker/ios/RNDatePicker.mm
+--- a/node_modules/react-native-date-picker/ios/RNDatePicker.mm
++++ b/node_modules/react-native-date-picker/ios/RNDatePicker.mm
+@@ -3,3 +3,3 @@
+ #ifdef RCT_NEW_ARCH_ENABLED
+-#import "RCTConvert.h"
++#import <React/RCTConvert.h>
+ #import <React/RCTConversions.h>
+@@ -16,3 +16,3 @@
+ #import "UIView+React.h"
+-#import "RCTComponent.h"
++#import <React/RCTComponent.h>
+ #endif
