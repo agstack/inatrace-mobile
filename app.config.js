@@ -30,6 +30,8 @@ export default ({ config }) => ({
       },
       infoPlist: {
         ITSAppUsesNonExemptEncryption: false,
+        NSPhotoLibraryUsageDescription:
+          'INATrace may access your photo library when you share images, such as QR codes.',
       },
     },
     android: {
