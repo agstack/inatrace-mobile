@@ -1,0 +1,120 @@
+workflows:
+  ios-testflight:
+    name: INATrace iOS - TestFlight
+    max_build_duration: 120
+    instance_type: mac_mini_m2
+
+    # This must match the name of the App Store Connect integration in the
+    # Codemagic account/team that owns this application.
+    integrations:
+      app_store_connect: Agroecology Map
+
+    environment:
+      groups:
+        - inatrace_ios
+      ios_signing:
+        distribution_type: app_store
+        bundle_identifier: org.agroecologymap.inatrace
+      vars:
+        IOS_BUNDLE_IDENTIFIER: org.agroecologymap.inatrace
+      node: v24.13.0
+      xcode: latest
+      cocoapods: default
+
+    scripts:
+      - name: Check the build number
+        script: |
+          set -eu
+          : "${IOS_BUILD_NUMBER:?Set IOS_BUILD_NUMBER in the inatrace_ios variable group}"
+          case "$IOS_BUILD_NUMBER" in
+            *[!0-9]*|'') echo 'IOS_BUILD_NUMBER must be a positive integer'; exit 1 ;;
+            0) echo 'IOS_BUILD_NUMBER must be greater than zero'; exit 1 ;;
+          esac
+
+      - name: Install JavaScript dependencies
+        script: npm ci
+
+      # Work only on Codemagic's checkout. The legacy config exposes the secret
+      # in Expo extra and embeds it in the generated Podfile. The installed
+      # rnmapbox podspec supports RNMAPBOX_MAPS_DOWNLOAD_TOKEN directly.
+      - name: Keep the Mapbox download token out of generated app configuration
+        script: |
+          node <<'NODE'
+          const fs = require('fs');
+          const file = 'app.config.js';
+          let source = fs.readFileSync(file, 'utf8');
+          for (const name of ['RNMapboxMapsDownloadToken', 'RN_MAPBOX_MAPS_DOWNLOAD_TOKEN']) {
+            const pattern = new RegExp('^[ \\t]*' + name + ':\\s*process\\.env\\.RN_MAPBOX_MAPS_DOWNLOAD_TOKEN,\\s*$', 'gm');
+            const matches = source.match(pattern) || [];
+            if (matches.length !== 1) throw new Error('Unexpected Mapbox configuration for ' + name);
+            source = source.replace(pattern, '');
+          }
+          fs.writeFileSync(file, source);
+          NODE
+
+      - name: Run mobile tests
+        script: npx jest --runInBand --watchAll=false
+
+      - name: Generate the iOS project
+        script: npx expo prebuild --platform ios --no-install
+
+      - name: Install CocoaPods dependencies
+        script: |
+          cd ios
+          pod install
+
+      - name: Set the iOS build number
+        script: |
+          cd ios
+          xcrun agvtool new-version -all "$IOS_BUILD_NUMBER"
+
+      - name: Configure signing profiles
+        script: xcode-project use-profiles
+
+      - name: Build the signed IPA
+        script: |
+          xcode-project build-ipa \
+            --workspace "$CM_BUILD_DIR/ios/INATrace.xcworkspace" \
+            --scheme INATrace
+
+      - name: Check the IPA for the Mapbox download token
+        script: |
+          python3 - <<'PY'
+          import glob
+          import os
+          import zipfile
+
+          files = glob.glob('build/ios/ipa/*.ipa')
+          if not files:
+              raise SystemExit('No IPA was produced')
+          tokens = {os.environ.get(name, '').encode() for name in
+                    ('RNMAPBOX_MAPS_DOWNLOAD_TOKEN', 'RN_MAPBOX_MAPS_DOWNLOAD_TOKEN')}
+          tokens.discard(b'')
+          if any(len(token) < 16 for token in tokens):
+              raise SystemExit('Unexpectedly short Mapbox download token')
+          for path in files:
+              with zipfile.ZipFile(path) as archive:
+                  for entry in archive.infolist():
+                      if entry.is_dir():
+                          continue
+                      with archive.open(entry) as source:
+                          tail = b''
+                          while chunk := source.read(1024 * 1024):
+                              data = tail + chunk
+                              if any(token in data for token in tokens):
+                                  raise SystemExit('Mapbox download token found in IPA; upload blocked')
+                              tail = data[-(max(map(len, tokens), default=1) - 1):] if tokens else b''
+          print('IPA checked for configured Mapbox download tokens')
+          PY
+
+    artifacts:
+      - build/ios/ipa/*.ipa
+      - /tmp/xcodebuild_logs/*.log
+
+    # Upload to App Store Connect; add builds to TestFlight groups manually.
+    # Neither App Store review nor public release is triggered by this workflow.
+    publishing:
+      app_store_connect:
+        auth: integration
+        submit_to_testflight: false
+        submit_to_app_store: false
