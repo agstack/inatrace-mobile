@@ -46,7 +46,19 @@ To run the INATrace app locally, follow these steps:
     EXPO_PUBLIC_DOCUMENTATION_URI=
     EXPO_PUBLIC_MAPBOX_ACCESS_TOKEN=
     RN_MAPBOX_MAPS_DOWNLOAD_TOKEN=
+    IOS_BUNDLE_IDENTIFIER=
    ```
+
+   `IOS_BUNDLE_IDENTIFIER` is optional and selects the iOS bundle identifier
+   during Expo configuration and native project generation. If omitted, it
+   defaults to `com.sunesis.inatracemobile`. For Codemagic, configure it as an
+   environment variable, for example `org.example.inatrace`, and ensure it
+   matches the App ID and signing profile in the target Apple account. If an
+   iOS native project already exists, regenerate or update it before building
+   so its bundle identifier matches the selected value.
+
+   A different bundle identifier is a different App Store identity; it does
+   not update an existing app or automatically transfer its local data.
 
 4. **Start the Development Server**: Launch the Expo development server.
 
@@ -59,6 +71,40 @@ or
 ```bash
 npx expo run:ios
 ```
+
+## iOS builds with Codemagic and TestFlight
+
+The `ios-testflight` workflow in `codemagic.yaml` builds and uploads an IPA to
+App Store Connect. Each operator configures their own Apple account and app:
+
+1. Register the app and explicit bundle identifier in Apple Developer and App
+   Store Connect. Create an App Store distribution provisioning profile and
+   ensure the corresponding distribution certificate and private key are
+   available to Codemagic.
+2. In Codemagic account or team settings, register the App Store Connect API
+   integration with the reference name `inatrace_app_store_connect`. Add the
+   App Store profile under Code signing identities as
+   `inatrace_app_store_profile`, and the matching certificate as
+   `inatrace_distribution_certificate`. These names are references in this
+   workflow; each account supplies its own credentials and signing files.
+3. Create the application environment variable group `inatrace_ios`. Set
+   `IOS_BUNDLE_IDENTIFIER` to the profile's exact bundle identifier and
+   `IOS_BUILD_NUMBER` to an unused positive integer for the app version.
+   Configure `EXPO_PUBLIC_API_URI`, optional `EXPO_PUBLIC_API_TEST_URI` and
+   `EXPO_PUBLIC_API_RW_URI`, `EXPO_PUBLIC_DOCUMENTATION_URI`, and
+   `EXPO_PUBLIC_MAPBOX_ACCESS_TOKEN` for the target deployment. Public Expo
+   variables are embedded in the app and must not contain secrets. If needed
+   for native SDK downloads, configure `RNMAPBOX_MAPS_DOWNLOAD_TOKEN` as a
+   secret in the same group; it is not the public Mapbox token.
+4. Run the workflow. The signing profile must match the configured bundle ID;
+   increment the build number before each subsequent upload. Once Apple has
+   processed the build, add it to a TestFlight group in App Store Connect.
+   The workflow does not submit the app for App Store release or automatically
+   add testers to a TestFlight group.
+
+See [Codemagic iOS signing](https://docs.codemagic.io/yaml-code-signing/signing-ios/)
+for managing certificates and provisioning profiles. Do not commit Apple keys,
+signing certificates, credentials, or private tokens.
 
 ## Building the App with EAS Build
 

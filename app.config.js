@@ -18,7 +18,7 @@ export default ({ config }) => ({
     assetBundlePatterns: ['**/*'],
     ios: {
       supportsTablet: true,
-      bundleIdentifier: 'com.sunesis.inatracemobile',
+      bundleIdentifier: process.env.IOS_BUNDLE_IDENTIFIER || 'com.sunesis.inatracemobile',
       privacyManifests: {
         NSPrivacyAccessedAPITypes: [
           {
@@ -30,6 +30,8 @@ export default ({ config }) => ({
       },
       infoPlist: {
         ITSAppUsesNonExemptEncryption: false,
+        NSPhotoLibraryUsageDescription:
+          'INATrace may access your photo library when you share images, such as QR codes.',
       },
     },
     android: {
