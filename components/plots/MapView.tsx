@@ -40,6 +40,7 @@ import Card, { CardProps } from '../common/Card';
 import * as turf from '@turf/turf';
 import MarkerPlotSvg from '../svg/MarkerPlotSvg';
 import { useSelectedFarmerState } from '@/state/state';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 Mapbox.setAccessToken(process.env.EXPO_PUBLIC_MAPBOX_ACCESS_TOKEN ?? '');
 
@@ -50,6 +51,7 @@ export default function MapView({
   seePlot,
   setSeePlot,
 }: ViewSwitcherProps) {
+  const insets = useSafeAreaInsets();
   const [location, setLocation] = useState<Location.LocationObject | null>(
     null
   );
@@ -903,7 +905,10 @@ export default function MapView({
                 </Pressable>
               </View>
             </View>
-            <View className="p-5 pb-10 w-full rounded-t-md bg-White">
+            <View
+              className="p-5 w-full rounded-t-md bg-White"
+              style={{ paddingBottom: Math.max(insets.bottom, 16) + 16 }}
+            >
               {/* Add location button */}
               {manualMode ? (
                 <View className="flex flex-row justify-center items-center mt-2">

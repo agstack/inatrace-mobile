@@ -18,7 +18,6 @@ import {
 import {
   ActivityIndicator,
   Alert,
-  Dimensions,
   KeyboardAvoidingView,
   Pressable,
   ScrollView,
@@ -411,39 +410,44 @@ export default function MapDownload() {
             </Text>
           </View>
           {location ? (
-            <Mapbox.MapView
-              className="border-[5px] border-blue-500"
-              style={{
-                height:
-                  Dimensions.get('window').height -
-                  (Platform.OS === 'android' ? 254 : 304),
-              }}
-              ref={mapRef}
-              onMapIdle={onRegionDidChange}
-              styleURL={Mapbox.StyleURL.SatelliteStreet}
-              onDidFinishLoadingMap={() => focusOnCurrentLocation()}
-            >
-              <Mapbox.Camera
-                zoomLevel={14}
-                minZoomLevel={10}
-                centerCoordinate={[
-                  location.coords.longitude,
-                  location.coords.latitude,
-                ]}
-                ref={cameraRef}
-              />
-              <Mapbox.PointAnnotation
-                coordinate={[
-                  location.coords.longitude,
-                  location.coords.latitude,
-                ]}
-                id="current-location"
+            <View className="flex-1">
+              <Mapbox.MapView
+                className="border-[5px] border-blue-500"
+                style={{ flex: 1 }}
+                ref={mapRef}
+                onMapIdle={onRegionDidChange}
+                styleURL={Mapbox.StyleURL.SatelliteStreet}
+                onDidFinishLoadingMap={() => focusOnCurrentLocation()}
               >
-                <View className="flex relative flex-row justify-center items-center w-5 h-5 bg-white rounded-full">
-                  <View className="w-4 h-4 bg-blue-500 rounded-full" />
-                </View>
-              </Mapbox.PointAnnotation>
-            </Mapbox.MapView>
+                <Mapbox.Camera
+                  zoomLevel={14}
+                  minZoomLevel={10}
+                  centerCoordinate={[
+                    location.coords.longitude,
+                    location.coords.latitude,
+                  ]}
+                  ref={cameraRef}
+                />
+                <Mapbox.PointAnnotation
+                  coordinate={[
+                    location.coords.longitude,
+                    location.coords.latitude,
+                  ]}
+                  id="current-location"
+                >
+                  <View className="flex relative flex-row justify-center items-center w-5 h-5 bg-white rounded-full">
+                    <View className="w-4 h-4 bg-blue-500 rounded-full" />
+                  </View>
+                </Mapbox.PointAnnotation>
+              </Mapbox.MapView>
+              <Pressable
+                className="flex absolute right-5 bottom-5 flex-row justify-center items-center w-16 h-16 rounded-full border-2 border-blue-500 bg-White"
+                onPress={focusOnCurrentLocation}
+                style={style.shadowMedium}
+              >
+                <Navigation color="#3b82f6" size={30} />
+              </Pressable>
+            </View>
           ) : (
             <View className="flex flex-col flex-1 justify-center items-center w-full h-full bg-White">
               <ActivityIndicator size="large" animating={true} />
@@ -456,16 +460,9 @@ export default function MapDownload() {
             })}
           </Text>
           <View
-            className="flex flex-row justify-between items-center px-5 pb-5 bg-White"
-            style={{ paddingBottom: Math.max(insets.bottom + 72, 112) }}
+            className="flex flex-row justify-between items-center px-5 pt-2 bg-White"
+            style={{ paddingBottom: Math.max(insets.bottom, 16) + 16 }}
           >
-            <Pressable
-              className="flex absolute right-5 bottom-32 flex-row justify-center items-center self-end mb-5 w-16 h-16 rounded-full border-2 border-blue-500 bg-White"
-              onPress={focusOnCurrentLocation}
-              style={style.shadowMedium}
-            >
-              <Navigation color="#3b82f6" size={30} />
-            </Pressable>
             <Pressable
               onPress={() => setSelectingMap(false)}
               className="w-[48%] px-5 py-3 rounded-md bg-Green flex flex-row items-center justify-center"
