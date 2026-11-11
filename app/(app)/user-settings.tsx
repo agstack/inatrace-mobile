@@ -19,13 +19,12 @@ import {
   useState,
 } from 'react';
 import { AuthContext } from '@/context/AuthContext';
-import { router, useNavigation } from 'expo-router';
+import { router } from 'expo-router';
 import i18n from '@/locales/i18n';
 import { Input } from '@/components/common/Input';
 import LanguageSwitcher from '@/components/settings/LanguageSwitcher';
 import {
   ChevronDown,
-  ChevronLeft,
   LogIn,
   LogOut,
   Map,
@@ -66,22 +65,6 @@ export default function UserSettings() {
     (props: any) => <FullWindowOverlay>{props.children}</FullWindowOverlay>,
     []
   );
-
-  const navigation = useNavigation();
-
-  useEffect(() => {
-    navigation.setOptions({
-      headerLeft: () => (
-        <Pressable
-          onPress={() => navigation.goBack()}
-          className="flex flex-row justify-center items-center mr-3"
-        >
-          <ChevronLeft color={Colors.orange} />
-          <Text className="font-medium text-Orange text-[18px]">Back</Text>
-        </Pressable>
-      ),
-    });
-  }, []);
 
   useEffect(() => {
     if (

@@ -1,5 +1,4 @@
-import { useNavigation } from 'expo-router';
-import { ChevronLeft, Pencil, RefreshCw } from 'lucide-react-native';
+import { Pencil, RefreshCw } from 'lucide-react-native';
 import {
   useCallback,
   useContext,
@@ -38,7 +37,6 @@ import { isCurrentSession, sessionGeneration } from '@/utils/sessionRequests';
 import { copyLegacyPending, legacyPendingCounts } from '@/realm/legacyRecovery';
 
 export default function DataSync() {
-  const navigation = useNavigation();
   const insets = useSafeAreaInsets();
   const {
     isConnected,
@@ -77,18 +75,6 @@ export default function DataSync() {
   );
 
   useEffect(() => {
-    navigation.setOptions({
-      headerLeft: () => (
-        <Pressable
-          onPress={() => navigation.goBack()}
-          className="flex flex-row justify-center items-center mr-3"
-        >
-          <ChevronLeft color={Colors.orange} />
-          <Text className="font-medium text-Orange text-[18px]">Back</Text>
-        </Pressable>
-      ),
-    });
-
     getItemsToSync();
     legacyPendingCounts().then(counts => setLegacyCount(counts.farmers + counts.plots)).catch(() => {
       Alert.alert(i18n.t('legacyRecovery.title'), i18n.t('legacyRecovery.error'));

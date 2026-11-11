@@ -1,8 +1,8 @@
-import { Text, Pressable, View } from 'react-native';
+import { Pressable, View } from 'react-native';
 import { Link, useNavigation } from 'expo-router';
 import { useContext, useEffect } from 'react';
 import { AuthContext } from '@/context/AuthContext';
-import { ChevronLeft, User2 } from 'lucide-react-native';
+import { User2 } from 'lucide-react-native';
 import FarmerInformationGuest from '@/components/farmers/info/FarmerInformationGuest';
 import FarmerInformation from '@/components/farmers/info/FarmerInformation';
 import { useSelectedFarmerState } from '@/state/state';
@@ -19,15 +19,6 @@ export default function FarmersInfo() {
   useEffect(() => {
     navigation.setOptions({
       title: `${selectedFarmer?.name ?? ''} ${selectedFarmer?.surname}`,
-      headerLeft: () => (
-        <Pressable
-          onPress={() => navigation.goBack()}
-          className="flex flex-row justify-center items-center mr-3"
-        >
-          <ChevronLeft color={Colors.orange} />
-          <Text className="font-medium text-Orange text-[18px]">Back</Text>
-        </Pressable>
-      ),
       headerRight: () => (
         <Link href="/user-settings" asChild>
           <Pressable>

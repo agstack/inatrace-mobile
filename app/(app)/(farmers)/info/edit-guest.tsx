@@ -11,7 +11,7 @@ import {
   BottomSheetScrollView,
 } from '@/components/common/AppBottomSheet';
 import { Link, useNavigation } from 'expo-router';
-import { ChevronLeft, PlusCircle, User2, XCircle } from 'lucide-react-native';
+import { PlusCircle, User2, XCircle } from 'lucide-react-native';
 import {
   useCallback,
   useContext,
@@ -98,15 +98,6 @@ export default function EditGuestFarmer() {
   useEffect(() => {
     navigation.setOptions({
       title: `${selectedFarmer?.name ?? ''} ${selectedFarmer?.surname}`,
-      headerLeft: () => (
-        <Pressable
-          onPress={() => navigation.goBack()}
-          className="flex flex-row justify-center items-center mr-3"
-        >
-          <ChevronLeft color={Colors.orange} />
-          <Text className="font-medium text-Orange text-[18px]">Back</Text>
-        </Pressable>
-      ),
       headerRight: () => (
         <Link href="/user-settings" asChild>
           <Pressable>

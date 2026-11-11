@@ -12,7 +12,7 @@ import {
   BottomSheetScrollView,
 } from '@/components/common/AppBottomSheet';
 import { useNavigation } from 'expo-router';
-import { ChevronLeft, PlusCircle, XCircle } from 'lucide-react-native';
+import { PlusCircle, XCircle } from 'lucide-react-native';
 import { useCallback, useContext, useEffect, useRef, useState } from 'react';
 import { View, Text, Pressable, Alert, Platform } from 'react-native';
 import { KeyboardAwareScrollView } from 'react-native-keyboard-aware-scroll-view';
@@ -245,20 +245,6 @@ export default function NewFarmer() {
       )
     );
   };
-
-  useEffect(() => {
-    navigation.setOptions({
-      headerLeft: () => (
-        <Pressable
-          onPress={() => navigation.goBack()}
-          className="flex flex-row justify-center items-center mr-3"
-        >
-          <ChevronLeft color={Colors.orange} />
-          <Text className="font-medium text-Orange text-[18px]">Back</Text>
-        </Pressable>
-      ),
-    });
-  }, []);
 
   const validateFields = () => {
     const errors: NewFarmerErrors = {

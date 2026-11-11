@@ -1,32 +1,44 @@
 import i18n from '@/locales/i18n';
 import { Stack } from 'expo-router';
-import { ChevronLeft } from 'lucide-react-native';
-import { Pressable, Text } from 'react-native';
-import Colors from '@/constants/Colors';
+import HeaderBackButton from '@/components/common/HeaderBackButton';
 
 export default function FarmersLayout() {
   return (
-    <Stack>
+    <Stack
+      screenOptions={{
+        headerTransparent: { ios: false },
+        headerBackButtonDisplayMode: 'minimal',
+      }}
+    >
       <Stack.Screen name="[type]" options={{ headerShown: false }} />
       <Stack.Screen
         name="new-farmer"
         options={{
           presentation: 'modal',
           title: i18n.t('farmers.newFarmer'),
-          headerLeft: () => <LeftHeader />,
+          headerLeft: () => <HeaderBackButton />,
         }}
       />
-      <Stack.Screen name="info/[id]" options={{ presentation: 'modal' }} />
+      <Stack.Screen
+        name="info/[id]"
+        options={{
+          presentation: 'modal',
+          headerLeft: () => <HeaderBackButton />,
+        }}
+      />
       <Stack.Screen
         name="info/edit-guest"
-        options={{ presentation: 'modal' }}
+        options={{
+          presentation: 'modal',
+          headerLeft: () => <HeaderBackButton />,
+        }}
       />
       <Stack.Screen
         name="view/[type]"
         options={{
           presentation: 'modal',
           title: i18n.t('plots.title'),
-          headerLeft: () => <LeftHeader />,
+          headerLeft: () => <HeaderBackButton />,
         }}
       />
       <Stack.Screen
@@ -34,16 +46,9 @@ export default function FarmersLayout() {
         options={{
           presentation: 'modal',
           title: i18n.t('plots.addPlot.newPlot'),
-          headerLeft: () => <LeftHeader />,
+          headerLeft: () => <HeaderBackButton />,
         }}
       />
     </Stack>
   );
 }
-
-const LeftHeader = () => (
-  <Pressable className="flex flex-row justify-center items-center mr-3">
-    <ChevronLeft color={Colors.orange} />
-    <Text className="font-medium text-Orange text-[18px]">Back</Text>
-  </Pressable>
-);
