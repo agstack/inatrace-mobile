@@ -1,0 +1,134 @@
+workflows:
+  ios-testflight:
+    name: INATrace iOS - TestFlight
+    max_build_duration: 120
+    instance_type: mac_mini_m2
+
+    # Each account registers its own API key using this integration name.
+    integrations:
+      app_store_connect: inatrace_app_store_connect
+
+    environment:
+      groups:
+        - inatrace_ios
+      ios_signing:
+        provisioning_profiles:
+          - profile: inatrace_app_store_profile
+            environment_variable: INATRACE_PROFILE_PATH
+        certificates:
+          - certificate: inatrace_distribution_certificate
+      node: v24.13.0
+      xcode: latest
+      cocoapods: default
+
+    scripts:
+      - name: Check build configuration and signing profile
+        script: |
+          set -eu
+          : "${IOS_BUILD_NUMBER:?Set IOS_BUILD_NUMBER in the inatrace_ios variable group}"
+          : "${IOS_BUNDLE_IDENTIFIER:?Set IOS_BUNDLE_IDENTIFIER in the inatrace_ios variable group}"
+          : "${INATRACE_PROFILE_PATH:?Configure the inatrace_app_store_profile signing identity}"
+          case "$IOS_BUILD_NUMBER" in
+            *[!0-9]*|'') echo 'IOS_BUILD_NUMBER must be a positive integer'; exit 1 ;;
+            0) echo 'IOS_BUILD_NUMBER must be greater than zero'; exit 1 ;;
+          esac
+          python3 - <<'PY'
+          import os, plistlib, subprocess
+          data = subprocess.check_output(['security', 'cms', '-D', '-i', os.environ['INATRACE_PROFILE_PATH']])
+          profile = plistlib.loads(data)
+          identifier = profile.get('Entitlements', {}).get('application-identifier', '')
+          teams = profile.get('ApplicationIdentifierPrefix', [])
+          expected = os.environ['IOS_BUNDLE_IDENTIFIER']
+          if not teams or identifier != f'{teams[0]}.{expected}':
+              raise SystemExit('The provisioning profile does not match IOS_BUNDLE_IDENTIFIER')
+          if profile.get('ProvisionedDevices') or profile.get('ProvisionsAllDevices') or profile.get('Entitlements', {}).get('get-task-allow'):
+              raise SystemExit('An App Store distribution provisioning profile is required')
+          PY
+
+      - name: Install JavaScript dependencies
+        script: npm ci
+
+      # Work only on Codemagic's checkout. The legacy config exposes the secret
+      # in Expo extra and embeds it in the generated Podfile. The installed
+      # rnmapbox podspec supports RNMAPBOX_MAPS_DOWNLOAD_TOKEN directly.
+      - name: Keep the Mapbox download token out of generated app configuration
+        script: |
+          node <<'NODE'
+          const fs = require('fs');
+          const file = 'app.config.js';
+          let source = fs.readFileSync(file, 'utf8');
+          for (const name of ['RNMapboxMapsDownloadToken', 'RN_MAPBOX_MAPS_DOWNLOAD_TOKEN']) {
+            const pattern = new RegExp('^[ \\t]*' + name + ':\\s*process\\.env\\.RN_MAPBOX_MAPS_DOWNLOAD_TOKEN,\\s*$', 'gm');
+            const matches = source.match(pattern) || [];
+            if (matches.length !== 1) throw new Error('Unexpected Mapbox configuration for ' + name);
+            source = source.replace(pattern, '');
+          }
+          fs.writeFileSync(file, source);
+          NODE
+
+      - name: Run mobile tests
+        script: npx jest --runInBand --watchAll=false
+
+      - name: Generate the iOS project
+        script: npx expo prebuild --platform ios --no-install
+
+      - name: Install CocoaPods dependencies
+        script: |
+          cd ios
+          pod install
+
+      - name: Set the iOS build number
+        script: |
+          cd ios
+          xcrun agvtool new-version -all "$IOS_BUILD_NUMBER"
+
+      - name: Configure signing profiles
+        script: xcode-project use-profiles --project "$CM_BUILD_DIR/ios/INATrace.xcodeproj"
+
+      - name: Build the signed IPA
+        script: |
+          xcode-project build-ipa \
+            --workspace "$CM_BUILD_DIR/ios/INATrace.xcworkspace" \
+            --scheme INATrace
+
+      - name: Check the IPA for the Mapbox download token
+        script: |
+          python3 - <<'PY'
+          import glob
+          import os
+          import zipfile
+
+          files = glob.glob('build/ios/ipa/*.ipa')
+          if not files:
+              raise SystemExit('No IPA was produced')
+          tokens = {os.environ.get(name, '').encode() for name in
+                    ('RNMAPBOX_MAPS_DOWNLOAD_TOKEN', 'RN_MAPBOX_MAPS_DOWNLOAD_TOKEN')}
+          tokens.discard(b'')
+          if any(len(token) < 16 for token in tokens):
+              raise SystemExit('Unexpectedly short Mapbox download token')
+          for path in files:
+              with zipfile.ZipFile(path) as archive:
+                  for entry in archive.infolist():
+                      if entry.is_dir():
+                          continue
+                      with archive.open(entry) as source:
+                          tail = b''
+                          while chunk := source.read(1024 * 1024):
+                              data = tail + chunk
+                              if any(token in data for token in tokens):
+                                  raise SystemExit('Mapbox download token found in IPA; upload blocked')
+                              tail = data[-(max(map(len, tokens), default=1) - 1):] if tokens else b''
+          print('IPA checked for configured Mapbox download tokens')
+          PY
+
+    artifacts:
+      - build/ios/ipa/*.ipa
+      - /tmp/xcodebuild_logs/*.log
+
+    # Upload to App Store Connect; add builds to TestFlight groups manually.
+    # Neither App Store review nor public release is triggered by this workflow.
+    publishing:
+      app_store_connect:
+        auth: integration
+        submit_to_testflight: false
+        submit_to_app_store: false
