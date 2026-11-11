@@ -54,7 +54,16 @@
     "title": "Ahabanza",
     "farmers": "Abahinzi",
     "newPlot": "Ikibanza gishya",
-    "syncData": "Hindura amakuru"
+    "syncData": "Hindura amakuru",
+    "offlineMapNotice": {
+      "none": "Manura ikarita kugira ngo uyikoreshe nta murandasi.",
+      "noneOffline": "Nta karita ihari itari kuri murandasi. Huza na murandasi kugira ngo uyumanure.",
+      "downloading": "Kumanura ikarita birakomeje.",
+      "expired": "Ikarita yawe itari kuri murandasi yarangiye. Ongera uyumanure kugira ngo ukomeze uyikoreshe nta murandasi.",
+      "download": "Kumanura ikarita",
+      "update": "Vugurura ikarita",
+      "view": "Reba"
+    }
   },
   "farmers": {
     "title": "Abahinzi",

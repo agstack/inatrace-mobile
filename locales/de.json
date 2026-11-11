@@ -54,7 +54,16 @@
     "title": "Startseite",
     "farmers": "Bauern",
     "newPlot": "Neue Parzelle",
-    "syncData": "Daten synchronisieren"
+    "syncData": "Daten synchronisieren",
+    "offlineMapNotice": {
+      "none": "Lade eine Karte herunter, um sie ohne Internet zu nutzen.",
+      "noneOffline": "Keine Offline-Karte verfügbar. Stelle eine Internetverbindung her, um eine herunterzuladen.",
+      "downloading": "Kartendownload läuft.",
+      "expired": "Deine Offline-Karte ist abgelaufen. Lade sie erneut herunter, um sie weiterhin offline zu nutzen.",
+      "download": "Karte herunterladen",
+      "update": "Karte aktualisieren",
+      "view": "Ansehen"
+    }
   },
   "farmers": {
     "title": "Bauern",
