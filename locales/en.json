@@ -64,14 +64,17 @@
       "expired": "Your offline map expired. Download it again to keep using it offline.",
       "download": "Download map",
       "update": "Update map",
-      "view": "View",,
+      "view": "View"
+    },
     "sessionNotice": {
       "none": "Log in to continue or use guest mode.",
       "expired": "Your session expired. Log in again.",
       "guest": "You are using guest mode.",
       "logIn": "Log in",
       "continueAsGuest": "Continue as guest",
-      "openGuestArea": "Open guest area"
+      "openGuestArea": "Open guest area",
+      "navLoginRequired": "Log in to use",
+      "navGuestArea": "Use the guest area"
     }
   },
   "farmers": {
