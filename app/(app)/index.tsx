@@ -3,15 +3,20 @@ import { View } from 'react-native';
 
 import Topbar from '@/components/common/Topbar';
 import HomeNavButton from '@/components/home/HomeNavButton';
+import OfflineMapNotice from '@/components/home/OfflineMapNotice';
 import FarmerSvg from '@/components/svg/FarmerSvg';
 import PlotSvg from '@/components/svg/PlotSvg';
 
 import i18n from '@/locales/i18n';
 import SyncDataButton from '@/components/home/SyncDataButton';
-import { useEffect, useState } from 'react';
+import { useContext, useEffect, useState } from 'react';
+import { AuthContext } from '@/context/AuthContext';
+import { useOfflineMapStatus } from '@/hooks/useOfflineMapStatus';
 
 export default function Home() {
   const [_, setLocale] = useState(i18n.locale);
+  const { isConnected } = useContext(AuthContext);
+  const offlineMapStatus = useOfflineMapStatus();
 
   useEffect(() => {
     const unsubscribe = i18n.onChange(() => {
@@ -39,8 +44,11 @@ export default function Home() {
           link="/(farmers)/newplot"
         />
       </View>
-      <View className="pb-5 border-t bg-White border-t-LightGray">
-        <SyncDataButton />
+      <View>
+        <OfflineMapNotice status={offlineMapStatus} isConnected={isConnected} />
+        <View className="pb-5 border-t bg-White border-t-LightGray">
+          <SyncDataButton />
+        </View>
       </View>
     </SafeAreaView>
   );

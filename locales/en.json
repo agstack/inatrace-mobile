@@ -54,7 +54,16 @@
     "title": "Home",
     "farmers": "Farmers",
     "newPlot": "New plot",
-    "syncData": "Sync data"
+    "syncData": "Sync data",
+    "offlineMapNotice": {
+      "none": "Download a map to use it without internet.",
+      "noneOffline": "No offline map available. Connect to the internet to download one.",
+      "downloading": "Map download in progress.",
+      "expired": "Your offline map expired. Download it again to keep using it offline.",
+      "download": "Download map",
+      "update": "Update map",
+      "view": "View"
+    }
   },
   "farmers": {
     "title": "Farmers",

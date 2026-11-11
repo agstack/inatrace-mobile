@@ -5,15 +5,8 @@ import { useCallback, useContext, useEffect, useRef, useState } from 'react';
 import { AuthContext } from '@/context/AuthContext';
 import i18n from '@/locales/i18n';
 
-import Mapbox from '@rnmapbox/maps';
-
-type OfflinePack = NonNullable<
-  Awaited<ReturnType<typeof Mapbox.offlineManager.getPack>>
->;
 import { ChevronLeft } from 'lucide-react-native';
 import Colors from '@/constants/Colors';
-
-Mapbox.setAccessToken(process.env.EXPO_PUBLIC_MAPBOX_ACCESS_TOKEN ?? '');
 
 export const unstable_settings = {
   initialRouteName: 'index',
@@ -25,7 +18,6 @@ export default function AppLayout() {
 
   const segments = useSegments();
 
-  const hasNavigatedToMapDownload = useRef(false);
   const hasNavigatedToDefaultFarmer = useRef(false);
 
   const prevAccessToken = useRef(accessToken);
@@ -44,7 +36,6 @@ export default function AppLayout() {
 
   const handleAuthCheck = useCallback(async () => {
     if (guestAccess) {
-      await checkForOfflineMaps();
       return;
     }
 
@@ -55,36 +46,15 @@ export default function AppLayout() {
 
       if (!isAuth) {
         await handleLoginGuest();
-      } else {
-        await checkForOfflineMaps();
       }
     }
-  }, [accessToken, segments]);
+  }, [accessToken, guestAccess]);
 
   const handleLoginGuest = async () => {
     await logInGuest();
     if (!hasNavigatedToDefaultFarmer.current) {
       hasNavigatedToDefaultFarmer.current = true;
       router.push('/(app)/(farmers)/info/0');
-    }
-  };
-
-  const checkForOfflineMaps = async () => {
-    // Only offer the offline-map onboarding from the entry screen. Running
-    // this on every segment change would override navigations such as the
-    // plot form after Save plot shape.
-    if (segments.length > 1) {
-      return;
-    }
-
-    try {
-      const packs: OfflinePack[] = await Mapbox.offlineManager.getPacks();
-      if (packs.length === 0 && !hasNavigatedToMapDownload.current) {
-        hasNavigatedToMapDownload.current = true;
-        router.push('/map-download');
-      }
-    } catch (error) {
-      console.error('Error fetching offline packs:', error);
     }
   };
 
