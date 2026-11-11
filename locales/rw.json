@@ -24,7 +24,9 @@
     "login": "Injira",
     "genericError": "Habayeho ikibazo, ongera ugerageze nyuma",
     "authError": "Izina ry'umukoresha cyangwa ijambo ry'ibanga ntibikwiye",
-    "guest": "Umushyitsi"
+    "guest": "Umushyitsi",
+    "showPassword": "Erekana ijambo ry'ibanga",
+    "hidePassword": "Hisha ijambo ry'ibanga"
   },
   "documentation": {
     "title": "Ibisobanuro",

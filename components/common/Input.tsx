@@ -1,17 +1,31 @@
 import Colors from '@/constants/Colors';
-import { Pressable, TextInput, View, Text } from 'react-native';
+import {
+  Pressable,
+  TextInput,
+  View,
+  Text,
+  type TextInputProps,
+} from 'react-native';
 import { Eye, EyeOff } from 'lucide-react-native';
 import cn from '@/utils/cn';
 import DatePicker from 'react-native-date-picker';
 import { useState } from 'react';
+import i18n from '@/locales/i18n';
 
 type InputProps = {
-  keyboardType?: 'default' | 'numeric';
+  keyboardType?: TextInputProps['keyboardType'];
   placeholder?: string;
   value: string;
   onChangeText: (text: string) => void;
   editable?: boolean;
   error?: boolean;
+  autoCapitalize?: TextInputProps['autoCapitalize'];
+  autoCorrect?: boolean;
+  textContentType?: TextInputProps['textContentType'];
+  autoComplete?: TextInputProps['autoComplete'];
+  returnKeyType?: TextInputProps['returnKeyType'];
+  onSubmitEditing?: TextInputProps['onSubmitEditing'];
+  secureTextEntry?: boolean;
 };
 
 type InputPasswordProps = {
@@ -25,6 +39,14 @@ export const Input = (props: InputProps) => {
       placeholder={props.placeholder}
       value={props.value}
       onChangeText={props.onChangeText}
+      autoCapitalize={props.autoCapitalize}
+      autoCorrect={props.autoCorrect}
+      keyboardType={props.keyboardType}
+      textContentType={props.textContentType}
+      autoComplete={props.autoComplete}
+      returnKeyType={props.returnKeyType}
+      onSubmitEditing={props.onSubmitEditing}
+      secureTextEntry={props.secureTextEntry}
       className={cn(
         'border border-LightGray w-full h-12 mt-1 px-2 text-[16px] rounded-md',
         props.editable === false ? 'text-DarkGray' : '',
@@ -37,26 +59,46 @@ export const Input = (props: InputProps) => {
 };
 
 export const InputPassword = (props: InputPasswordProps) => {
+  const isVisible = props.isPasswordVisible;
+
   return (
     <View className="flex flex-row justify-between items-center mt-1 w-full h-12 rounded-md border border-LightGray">
       <TextInput
         placeholder={props.placeholder}
         value={props.value}
         onChangeText={props.onChangeText}
-        secureTextEntry={!props.isPasswordVisible}
+        secureTextEntry={!isVisible}
+        autoCapitalize="none"
+        autoCorrect={false}
+        textContentType="password"
+        autoComplete="current-password"
+        returnKeyType={props.returnKeyType}
+        onSubmitEditing={props.onSubmitEditing}
         placeholderTextColor={Colors.darkGray}
-        className="text-[16px] h-12 px-2 rounded-md w-[85%]"
+        // A secure TextInput needs an explicit text colour on Android,
+        // otherwise the masked characters are not drawn.
+        style={{
+          fontSize: 16,
+          height: 48,
+          paddingHorizontal: 8,
+          width: '85%',
+          color: Colors.black,
+        }}
       />
       <View className="mr-2" />
-      {props.isPasswordVisible ? (
-        <Pressable onPress={() => props.setIsPasswordVisible(false)}>
-          <Eye color={Colors.lightGray} style={{ marginRight: 12 }} />
-        </Pressable>
-      ) : (
-        <Pressable onPress={() => props.setIsPasswordVisible(true)}>
+      <Pressable
+        accessibilityRole="button"
+        accessibilityLabel={i18n.t(
+          isVisible ? 'login.hidePassword' : 'login.showPassword'
+        )}
+        onPress={() => props.setIsPasswordVisible(!isVisible)}
+      >
+        {isVisible ? (
           <EyeOff color={Colors.lightGray} style={{ marginRight: 12 }} />
-        </Pressable>
-      )}
+        ) : (
+          <Eye color={Colors.lightGray} style={{ marginRight: 12 }} />
+        )}
+      </Pressable>
     </View>
   );
 };

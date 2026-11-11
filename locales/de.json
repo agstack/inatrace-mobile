@@ -24,7 +24,9 @@
     "login": "Einloggen",
     "genericError": "Etwas ist schief gelaufen, bitte versuchen Sie es später noch einmal",
     "authError": "Falscher Benutzername oder Passwort",
-    "guest": "Gast"
+    "guest": "Gast",
+    "showPassword": "Passwort anzeigen",
+    "hidePassword": "Passwort verbergen"
   },
   "documentation": {
     "title": "Dokumentation",

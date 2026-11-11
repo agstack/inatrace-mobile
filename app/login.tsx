@@ -347,6 +347,12 @@ export default function Login() {
                 placeholder={i18n.t('login.usernamePlaceholder')}
                 value={username}
                 onChangeText={setUsername}
+                autoCapitalize="none"
+                autoCorrect={false}
+                keyboardType="email-address"
+                textContentType="username"
+                autoComplete="username"
+                returnKeyType="next"
               />
             </View>
             <View className="mt-3">
@@ -357,6 +363,8 @@ export default function Login() {
                 onChangeText={setPassword}
                 isPasswordVisible={isPasswordVisible}
                 setIsPasswordVisible={setIsPasswordVisible}
+                returnKeyType="go"
+                onSubmitEditing={handleLogIn}
               />
             </View>
             <View className="self-start mt-3">
