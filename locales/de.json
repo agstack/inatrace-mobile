@@ -196,7 +196,11 @@
       "errorTitle": "Fehler",
       "errorDeleting": "Fehler beim Löschen des Pakets",
       "errorDownloadingTitle": "Download-Fehler",
-      "errorDownloading": "Fehler beim Starten des Downloads"
+      "errorDownloading": "Fehler beim Starten des Downloads",
+    "downloadInProgressTitle": "Download läuft",
+    "downloadInProgressMessage": "Die Karte wird noch heruntergeladen. Wenn du jetzt gehst, kann der Download unterbrochen werden.",
+    "stay": "Bleiben",
+    "leave": "Verlassen"
     },
     "mapLoading": "Karte wird geladen",
     "addPlot": {

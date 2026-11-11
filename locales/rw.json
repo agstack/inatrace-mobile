@@ -196,7 +196,11 @@
       "errorTitle": "Ikosa",
       "errorDeleting": "Habaye ikibazo mu gusiba ipaki",
       "errorDownloadingTitle": "Ikosa ryo Kumanura",
-      "errorDownloading": "Habaye ikibazo mu gutangira kumanura"
+      "errorDownloading": "Habaye ikibazo mu gutangira kumanura",
+    "downloadInProgressTitle": "Kumanura birakomeje",
+    "downloadInProgressMessage": "Ikarita iracyakururwa. Nuva ubu, kumanura bishobora guhagarara.",
+    "stay": "Guma",
+    "leave": "Va"
     },
     "mapLoading": "Ikarita irimo kuboneka",
     "addPlot": {

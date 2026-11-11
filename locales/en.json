@@ -196,7 +196,11 @@
       "errorTitle": "Error",
       "errorDeleting": "There was an error deleting the pack",
       "errorDownloadingTitle": "Download Error",
-      "errorDownloading": "There was an error starting the download"
+      "errorDownloading": "There was an error starting the download",
+    "downloadInProgressTitle": "Download in progress",
+    "downloadInProgressMessage": "The map is still downloading. If you leave now, the download may be interrupted.",
+    "stay": "Stay",
+    "leave": "Leave"
     },
     "mapLoading": "Loading map",
     "addPlot": {

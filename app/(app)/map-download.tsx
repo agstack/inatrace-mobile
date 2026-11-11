@@ -7,7 +7,14 @@ import {
   Trash,
   X,
 } from 'lucide-react-native';
-import { createRef, useContext, useEffect, useRef, useState } from 'react';
+import {
+  createRef,
+  useCallback,
+  useContext,
+  useEffect,
+  useRef,
+  useState,
+} from 'react';
 import {
   ActivityIndicator,
   Alert,
@@ -31,16 +38,14 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import cn from '@/utils/cn';
 import type { Camera as CameraRef } from '@rnmapbox/maps';
 import Colors from '@/constants/Colors';
+import {
+  applyProgress,
+  shouldKeepPolling,
+  toPackView,
+  type OfflinePackView,
+} from '@/utils/offlinePacks';
 
 Mapbox.setAccessToken(process.env.EXPO_PUBLIC_MAPBOX_ACCESS_TOKEN ?? '');
-
-type OfflinePack = {
-  name: string;
-  state: string;
-  percentage: number;
-  completedResourceSize: number;
-  expires: string;
-};
 
 export default function MapDownload() {
   const navigation = useNavigation();
@@ -50,7 +55,7 @@ export default function MapDownload() {
 
   const [location, setLocation] = useState<LocationObject | null>(null);
 
-  const [offlinePacks, setOfflinePacks] = useState<OfflinePack[]>([]);
+  const [offlinePacks, setOfflinePacks] = useState<OfflinePackView[]>([]);
   const [bounds, setBounds] = useState<any | null>(null);
   const [estimatedSize, setEstimatedSize] = useState<number>(0);
   const [selectingMap, setSelectingMap] = useState<boolean>(false);
@@ -60,6 +65,103 @@ export default function MapDownload() {
 
   const mapRef = createRef<Mapbox.MapView>();
   const cameraRef = useRef<CameraRef>(null);
+
+  const pollRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const pollingRef = useRef(false);
+  const mountedRef = useRef(true);
+  const downloadActiveRef = useRef(false);
+
+  const setDownloading = useCallback((value: boolean) => {
+    downloadActiveRef.current = value;
+  }, []);
+
+  const readPacks = useCallback(async (): Promise<OfflinePackView[]> => {
+    try {
+      const packs = await Mapbox.offlineManager.getPacks();
+      const views = packs.map(toPackView);
+      if (mountedRef.current) setOfflinePacks(views);
+      return views;
+    } catch (error) {
+      console.error('Error fetching offline packs:', error);
+      return [];
+    }
+  }, []);
+
+  const stopPolling = useCallback(() => {
+    if (pollRef.current) {
+      clearTimeout(pollRef.current);
+      pollRef.current = null;
+    }
+  }, []);
+
+  const pollStatus = useCallback(async () => {
+    if (pollingRef.current || !mountedRef.current) return;
+
+    pollingRef.current = true;
+    const packs = await readPacks();
+    pollingRef.current = false;
+
+    if (!mountedRef.current) return;
+
+    if (shouldKeepPolling(packs, downloadActiveRef.current)) {
+      pollRef.current = setTimeout(() => {
+        void pollStatus();
+      }, 1000);
+    } else {
+      pollRef.current = null;
+    }
+  }, [readPacks]);
+
+  const startPolling = useCallback(() => {
+    if (!mountedRef.current || pollRef.current) return;
+    void pollStatus();
+  }, [pollStatus]);
+
+  const bootstrapPacks = useCallback(async () => {
+    let packs: any[] = [];
+    try {
+      packs = await Mapbox.offlineManager.getPacks();
+    } catch (error) {
+      console.error('Error fetching offline packs:', error);
+      return;
+    }
+
+    const views = packs.map(toPackView);
+    if (mountedRef.current) setOfflinePacks(views);
+
+    // Resume packs left unfinished by a previous session instead of leaving
+    // them silently stuck.
+    for (const pack of packs) {
+      const state = pack.pack?.state;
+      const percentage = pack.pack?.percentage ?? 0;
+      if (state === 'inactive' && percentage < 100) {
+        try {
+          await pack.resume?.();
+        } catch (error) {
+          console.error('Error resuming offline pack:', error);
+        }
+      }
+    }
+
+    if (shouldKeepPolling(views, false)) startPolling();
+  }, [startPolling]);
+
+  const handleProgress = useCallback(
+    (status: any) => {
+      if (!mountedRef.current) return;
+
+      setOfflinePacks((current) => applyProgress(current, status));
+
+      if (status.state === 'complete') {
+        setDownloading(false);
+        // getPacks carries the expiry and the final size.
+        void readPacks();
+      } else if (status.state !== 'invalid') {
+        setDownloading(true);
+      }
+    },
+    [readPacks, setDownloading]
+  );
 
   useEffect(() => {
     navigation.setOptions({
@@ -79,41 +181,45 @@ export default function MapDownload() {
   }, [selectingMap]);
 
   useEffect(() => {
-    checkForOfflineMaps();
+    mountedRef.current = true;
+    void bootstrapPacks();
     askForLocationPermission();
-  }, []);
+    return () => {
+      mountedRef.current = false;
+      stopPolling();
+    };
+  }, [bootstrapPacks, stopPolling]);
 
-  const checkForOfflineMaps = async () => {
-    try {
-      const packs = await Mapbox.offlineManager.getPacks();
-      let completeCount = 0;
-      const displayPacks = packs.map((pack: any) => {
-        if (pack.pack.state === 'complete') {
-          completeCount++;
-        }
+  useEffect(() => {
+    const unsubscribe = (navigation as any).addListener(
+      'beforeRemove',
+      (event: any) => {
+        if (!downloadActiveRef.current) return;
 
-        return {
-          name: pack.name,
-          state: pack.pack?.state ?? 'unknown',
-          percentage: pack.pack?.percentage ?? 0,
-          completedResourceSize: pack.pack?.completedResourceSize ?? 0,
-          expires: pack.pack?.expires ?? 'unknown',
-        };
-      });
-
-      setOfflinePacks(displayPacks);
-
-      if (completeCount === packs.length) {
-        return;
+        event.preventDefault();
+        Alert.alert(
+          i18n.t('plots.offlineMapsScreen.downloadInProgressTitle'),
+          i18n.t('plots.offlineMapsScreen.downloadInProgressMessage'),
+          [
+            {
+              text: i18n.t('plots.offlineMapsScreen.stay'),
+              style: 'cancel',
+            },
+            {
+              text: i18n.t('plots.offlineMapsScreen.leave'),
+              style: 'destructive',
+              onPress: () => {
+                setDownloading(false);
+                navigation.dispatch(event.data.action);
+              },
+            },
+          ]
+        );
       }
+    );
 
-      setTimeout(() => {
-        checkForOfflineMaps();
-      }, 1000);
-    } catch (error) {
-      console.error('Error fetching offline packs:', error);
-    }
-  };
+    return unsubscribe;
+  }, [navigation, setDownloading]);
 
   const askForLocationPermission = async () => {
     const { status } = await Location.requestForegroundPermissionsAsync();
@@ -166,6 +272,8 @@ export default function MapDownload() {
     const metadata = { name: packName, date: new Date().toISOString() };
 
     setDownloadConfirm(false);
+    setDownloading(true);
+    startPolling();
 
     try {
       await Mapbox.offlineManager.createPack(
@@ -180,13 +288,23 @@ export default function MapDownload() {
           maxZoom: 20,
           metadata,
         },
-        (progress: any) => {
-          checkForOfflineMaps();
+        (_pack: any, status: any) => {
+          handleProgress(status);
+        },
+        (_pack: any, error: any) => {
+          console.error('Error downloading offline pack:', error);
+          setDownloading(false);
+          void readPacks();
+          Alert.alert(
+            i18n.t('plots.offlineMapsScreen.errorDownloadingTitle'),
+            i18n.t('plots.offlineMapsScreen.errorDownloading')
+          );
         }
       );
 
       setSelectingMap(false);
     } catch (error) {
+      setDownloading(false);
       console.error('Error starting offline pack download:', error);
       Alert.alert(
         i18n.t('plots.offlineMapsScreen.errorDownloadingTitle'),
@@ -198,7 +316,7 @@ export default function MapDownload() {
   const deleteOfflinePack = async (packName: string) => {
     try {
       await Mapbox.offlineManager.deletePack(packName);
-      checkForOfflineMaps();
+      await readPacks();
     } catch (error) {
       console.error('Error deleting offline pack:', error);
       Alert.alert(

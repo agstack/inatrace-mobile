@@ -196,7 +196,11 @@
       "errorTitle": "Error",
       "errorDeleting": "Hubo un error al eliminar el paquete",
       "errorDownloadingTitle": "Error de descarga",
-      "errorDownloading": "Hubo un error al iniciar la descarga"
+      "errorDownloading": "Hubo un error al iniciar la descarga",
+    "downloadInProgressTitle": "Descarga en curso",
+    "downloadInProgressMessage": "El mapa todavía se está descargando. Si sales ahora, la descarga puede interrumpirse.",
+    "stay": "Quedarme",
+    "leave": "Salir"
     },
     "mapLoading": "Cargando mapa",
     "addPlot": {
