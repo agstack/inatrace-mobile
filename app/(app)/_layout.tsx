@@ -42,7 +42,10 @@ export default function AppLayout() {
       const isAuth = await checkAuth();
 
       if (!isAuth) {
-        await handleLoginGuest();
+        // An expired stored session must not silently become guest access.
+        router.replace('/login');
+      } else {
+        await checkForOfflineMaps();
       }
     }
   }, [accessToken, guestAccess]);

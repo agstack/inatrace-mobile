@@ -22,6 +22,7 @@ import { NativeModules } from 'react-native';
 import { getItemAsync } from 'expo-secure-store';
 import { clearOfflineContext, currentOfflinePath, selectOfflineContext } from '@/realm/context';
 import { allowSessionRequests, cancelSessionRequests, isCurrentSession, sessionGeneration } from '@/utils/sessionRequests';
+import { accessTokenFromSetCookie } from '@/utils/session';
 
 const imageDirectoryJobs = new Map<string, Promise<void>>();
 
@@ -181,6 +182,26 @@ export function SessionProvider(props: React.PropsWithChildren<any>) {
       return true;
     }
 
+    // The stored access token expired: try to renew it before giving up, so a
+    // valid refresh token keeps the session without asking for credentials.
+    if (accessToken && accessToken !== 'none') {
+      try {
+        const response = await axios.post(
+          `${instance}/api/user/refresh_authentication`
+        );
+        const refreshedToken = accessTokenFromSetCookie(
+          response.headers['set-cookie']
+        );
+
+        if (refreshedToken) {
+          await setAccessToken(refreshedToken);
+          return true;
+        }
+      } catch (error) {
+        console.error('Error refreshing the session:', error);
+      }
+    }
+
     return false;
   };
 
@@ -197,14 +218,11 @@ export function SessionProvider(props: React.PropsWithChildren<any>) {
         password,
       });
 
-      const setCookieHeader = responseLogin.headers['set-cookie'];
+      const accessToken = accessTokenFromSetCookie(
+        responseLogin.headers['set-cookie']
+      );
 
-      if (setCookieHeader) {
-        const accessToken = setCookieHeader[0]
-          .split(',')[0]
-          .split(';')[0]
-          .split('=')[1];
-
+      if (accessToken) {
         const responseUserData = await axios.get(
           `${instance}/api/user/profile`
         );
