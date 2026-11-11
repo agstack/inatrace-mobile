@@ -72,7 +72,7 @@ export const AuthContext = createContext<{
   documentationModal: false,
 });
 
-const isTokenExpired = (token: string): boolean => {
+export const isTokenExpired = (token: string): boolean => {
   // The local backend can issue an opaque token instead of a JWT. There is
   // no expiry to inspect in that case, so leave the session untouched instead
   // of surfacing a decoding error in LogBox.

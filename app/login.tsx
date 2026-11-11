@@ -1,5 +1,3 @@
-import LoginLowerBlobSvg from '@/components/svg/LoginLowerBlob';
-import LoginUpperBlobSvg from '@/components/svg/LoginUpperBlob';
 import {
   Keyboard,
   KeyboardAvoidingView,
@@ -12,12 +10,13 @@ import {
   ScrollView,
   TextInput,
   NativeModules,
+  Platform,
 } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 import LanguageSwitcher from '@/components/settings/LanguageSwitcher';
-import { ChevronDown, Globe, Plus, X } from 'lucide-react-native';
+import { ChevronDown, ChevronLeft, Globe, Plus, X } from 'lucide-react-native';
 
 import i18n from '@/locales/i18n';
 import { Input, InputPassword } from '@/components/common/Input';
@@ -189,7 +188,7 @@ export default function Login() {
 
   return (
     <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
-      <View className="flex flex-col justify-between h-full bg-White">
+      <View className="flex flex-col h-full bg-Background">
         {askLanguage && (
           <AppModal
             visible={askLanguage}
@@ -303,12 +302,28 @@ export default function Login() {
             </View>
           </AppModal>
         )}
-        <LoginUpperBlobSvg />
-        <SafeAreaView className="px-5">
-          <KeyboardAvoidingView
-            behavior="position"
-            keyboardVerticalOffset={300}
+        <SafeAreaView className="px-5 pt-4 flex-1">
+          <Pressable
+            accessibilityRole="button"
+            accessibilityLabel="Back"
+            onPress={() => {
+              if (router.canGoBack()) router.back();
+              else router.replace('/');
+            }}
+            className="flex flex-row items-center mb-4"
           >
+            <ChevronLeft color={Colors.orange} />
+            <Text className="font-medium text-Orange text-[18px]">Back</Text>
+          </Pressable>
+          <KeyboardAvoidingView
+            style={{ flex: 1 }}
+            behavior={Platform.OS === 'ios' ? 'padding' : undefined}
+          >
+            <ScrollView
+              keyboardShouldPersistTaps="handled"
+              showsVerticalScrollIndicator={false}
+              contentContainerStyle={{ paddingBottom: 32 }}
+            >
             <View className="flex flex-row justify-between items-center">
               <View>
                 <Text className="text-[24px] font-semibold">
@@ -417,11 +432,9 @@ export default function Login() {
                 </Pressable>
               </View>
             </View>
+            </ScrollView>
           </KeyboardAvoidingView>
         </SafeAreaView>
-        <View className="flex items-end w-full">
-          <LoginLowerBlobSvg />
-        </View>
       </View>
     </TouchableWithoutFeedback>
   );
