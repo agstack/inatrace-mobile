@@ -24,7 +24,9 @@
     "login": "Iniciar sesión",
     "genericError": "Algo salió mal, por favor intente nuevamente más tarde",
     "authError": "Usuario o contraseña incorrectos",
-    "guest": "Invitado"
+    "guest": "Invitado",
+    "showPassword": "Mostrar contraseña",
+    "hidePassword": "Ocultar contraseña"
   },
   "documentation": {
     "title": "Documentación",

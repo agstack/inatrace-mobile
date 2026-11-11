@@ -24,7 +24,9 @@
     "login": "Log in",
     "genericError": "Something went wrong, please try again later",
     "authError": "Wrong username or password",
-    "guest": "Guest"
+    "guest": "Guest",
+    "showPassword": "Show password",
+    "hidePassword": "Hide password"
   },
   "documentation": {
     "title": "Documentation",
