@@ -64,7 +64,14 @@
       "expired": "Deine Offline-Karte ist abgelaufen. Lade sie erneut herunter, um sie weiterhin offline zu nutzen.",
       "download": "Karte herunterladen",
       "update": "Karte aktualisieren",
-      "view": "Ansehen"
+      "view": "Ansehen",,
+    "sessionNotice": {
+      "none": "Melde dich an, um fortzufahren, oder nutze den Gastmodus.",
+      "expired": "Deine Sitzung ist abgelaufen. Melde dich erneut an.",
+      "guest": "Du nutzt den Gastmodus.",
+      "logIn": "Anmelden",
+      "continueAsGuest": "Als Gast fortfahren",
+      "openGuestArea": "Gastbereich öffnen"
     }
   },
   "farmers": {

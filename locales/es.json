@@ -64,7 +64,14 @@
       "expired": "Tu mapa sin conexión caducó. Vuelve a descargarlo para seguir usándolo sin conexión.",
       "download": "Descargar mapa",
       "update": "Actualizar mapa",
-      "view": "Ver"
+      "view": "Ver",,
+    "sessionNotice": {
+      "none": "Inicia sesión para continuar o usa el modo invitado.",
+      "expired": "Tu sesión caducó. Inicia sesión de nuevo.",
+      "guest": "Estás usando el modo invitado.",
+      "logIn": "Iniciar sesión",
+      "continueAsGuest": "Continuar como invitado",
+      "openGuestArea": "Abrir área de invitado"
     }
   },
   "farmers": {

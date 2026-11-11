@@ -4,6 +4,7 @@ import { View } from 'react-native';
 import Topbar from '@/components/common/Topbar';
 import HomeNavButton from '@/components/home/HomeNavButton';
 import OfflineMapNotice from '@/components/home/OfflineMapNotice';
+import SessionNotice from '@/components/home/SessionNotice';
 import FarmerSvg from '@/components/svg/FarmerSvg';
 import PlotSvg from '@/components/svg/PlotSvg';
 
@@ -15,8 +16,14 @@ import { useOfflineMapStatus } from '@/hooks/useOfflineMapStatus';
 
 export default function Home() {
   const [_, setLocale] = useState(i18n.locale);
-  const { isConnected } = useContext(AuthContext);
+  const { isConnected, sessionState, logInGuest } = useContext(AuthContext);
   const offlineMapStatus = useOfflineMapStatus();
+
+  const authenticated = sessionState === 'authenticated';
+  const navHint =
+    sessionState === 'guest'
+      ? i18n.t('home.sessionNotice.navGuestArea')
+      : i18n.t('home.sessionNotice.navLoginRequired');
 
   useEffect(() => {
     const unsubscribe = i18n.onChange(() => {
@@ -37,14 +44,24 @@ export default function Home() {
           title={i18n.t('home.farmers')}
           icon={FarmerSvg}
           link="/(farmers)/farmers"
+          disabled={!authenticated}
+          hint={navHint}
         />
         <HomeNavButton
           title={i18n.t('home.newPlot')}
           icon={PlotSvg}
           link="/(farmers)/newplot"
+          disabled={!authenticated}
+          hint={navHint}
         />
       </View>
       <View>
+        <SessionNotice
+          state={sessionState}
+          onGuest={() => {
+            void logInGuest();
+          }}
+        />
         <OfflineMapNotice status={offlineMapStatus} isConnected={isConnected} />
         <View className="pb-5 border-t bg-White border-t-LightGray">
           <SyncDataButton />
