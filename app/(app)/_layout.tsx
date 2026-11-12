@@ -1,4 +1,4 @@
-import { Stack, router, useSegments } from 'expo-router';
+import { Stack, useSegments } from 'expo-router';
 import { useCallback, useContext, useEffect, useRef, useState } from 'react';
 
 import { AuthContext } from '@/context/AuthContext';
@@ -10,15 +10,13 @@ export const unstable_settings = {
 };
 
 export default function AppLayout() {
-  const { checkAuth, accessToken, guestAccess, logInGuest } =
-    useContext(AuthContext);
+  const { checkAuth, accessToken, guestAccess } = useContext(AuthContext);
 
   const segments = useSegments();
 
-  const hasNavigatedToDefaultFarmer = useRef(false);
-
   const prevAccessToken = useRef(accessToken);
   const prevSegments = useRef(segments);
+  const lastCheckedToken = useRef<string | null>(null);
 
   useEffect(() => {
     if (
@@ -32,28 +30,15 @@ export default function AppLayout() {
   }, [segments, accessToken]);
 
   const handleAuthCheck = useCallback(async () => {
-    if (guestAccess) {
-      return;
-    }
+    // Never navigate on launch: the home screen shows the session prompt and
+    // the user chooses to log in or continue as guest.
+    if (guestAccess) return;
+    if (!accessToken || accessToken === 'none') return;
+    if (lastCheckedToken.current === accessToken) return;
 
-    if (accessToken === 'none') {
-      await handleLoginGuest();
-    } else if (accessToken) {
-      const isAuth = await checkAuth();
-
-      if (!isAuth) {
-        await handleLoginGuest();
-      }
-    }
+    lastCheckedToken.current = accessToken;
+    await checkAuth();
   }, [accessToken, guestAccess]);
-
-  const handleLoginGuest = async () => {
-    await logInGuest();
-    if (!hasNavigatedToDefaultFarmer.current) {
-      hasNavigatedToDefaultFarmer.current = true;
-      router.push('/(app)/(farmers)/info/0');
-    }
-  };
 
   return (
     <Stack

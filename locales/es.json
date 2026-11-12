@@ -65,6 +65,16 @@
       "download": "Descargar mapa",
       "update": "Actualizar mapa",
       "view": "Ver"
+    },
+    "sessionNotice": {
+      "none": "Inicia sesión para continuar o usa el modo invitado.",
+      "expired": "Tu sesión caducó. Inicia sesión de nuevo.",
+      "guest": "Estás usando el modo invitado.",
+      "logIn": "Iniciar sesión",
+      "continueAsGuest": "Continuar como invitado",
+      "openGuestArea": "Abrir área de invitado",
+      "navLoginRequired": "Inicia sesión para usar",
+      "navGuestArea": "Usa el área de invitado"
     }
   },
   "farmers": {

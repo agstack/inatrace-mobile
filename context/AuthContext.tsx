@@ -22,9 +22,17 @@ import { NativeModules } from 'react-native';
 import { getItemAsync } from 'expo-secure-store';
 import { clearOfflineContext, currentOfflinePath, selectOfflineContext } from '@/realm/context';
 import { allowSessionRequests, cancelSessionRequests, isCurrentSession, sessionGeneration } from '@/utils/sessionRequests';
+import { accessTokenFromSetCookie } from '@/utils/session';
 
 const imageDirectoryJobs = new Map<string, Promise<void>>();
 
+
+export type SessionState =
+  | 'unknown'
+  | 'authenticated'
+  | 'guest'
+  | 'expired'
+  | 'none';
 
 export const AuthContext = createContext<{
   logIn: (username: string, password: string) => Promise<LogInResponse>;
@@ -39,6 +47,7 @@ export const AuthContext = createContext<{
   instance: string;
   makeRequest: ({ url, method, body, headers }: RequestParams) => Promise<any>;
   accessToken: string | null;
+  sessionState: SessionState;
   user: User | null;
   selectedCompany: number | string | null;
   companies: (CompanyInfo | undefined)[] | string | null;
@@ -61,6 +70,7 @@ export const AuthContext = createContext<{
   refreshFarmers: async () => void 0,
   instance: process.env.EXPO_PUBLIC_API_URI ?? '',
   accessToken: null,
+  sessionState: 'unknown',
   user: null,
   companies: null,
   selectedCompany: null,
@@ -122,6 +132,18 @@ export function SessionProvider(props: React.PropsWithChildren<any>) {
   const [documentationModal, setDocumentationModal] = useState<boolean>(false);
 
   const [guestAccess, setGuestAccess] = useState<boolean>(false);
+  const [sessionState, setSessionState] = useState<SessionState>('unknown');
+
+  useEffect(() => {
+    if (guestAccess) {
+      setSessionState('guest');
+      return;
+    }
+
+    if (!accessToken || accessToken === 'none') {
+      setSessionState('none');
+    }
+  }, [accessToken, guestAccess]);
 
   const setInstance = (value: string) => {
     // The login screen must be able to switch servers before authentication.
@@ -171,16 +193,41 @@ export function SessionProvider(props: React.PropsWithChildren<any>) {
       await selectOfflineContext(server, account.id);
       allowSessionRequests(server);
     } else if (accessToken && accessToken !== 'none') {
+      setSessionState('expired');
       return false;
     }
     if (!connected) {
+      setSessionState('authenticated');
       return true;
     }
 
     if (accessToken && !isTokenExpired(accessToken)) {
+      setSessionState('authenticated');
       return true;
     }
 
+    // The stored access token expired: try to renew it before giving up, so a
+    // valid refresh token keeps the session without asking for credentials.
+    if (accessToken && accessToken !== 'none') {
+      try {
+        const response = await axios.post(
+          `${instance}/api/user/refresh_authentication`
+        );
+        const refreshedToken = accessTokenFromSetCookie(
+          response.headers['set-cookie']
+        );
+
+        if (refreshedToken) {
+          await setAccessToken(refreshedToken);
+          setSessionState('authenticated');
+          return true;
+        }
+      } catch (error) {
+        console.error('Error refreshing the session:', error);
+      }
+    }
+
+    setSessionState(accessToken && accessToken !== 'none' ? 'expired' : 'none');
     return false;
   };
 
@@ -197,14 +244,11 @@ export function SessionProvider(props: React.PropsWithChildren<any>) {
         password,
       });
 
-      const setCookieHeader = responseLogin.headers['set-cookie'];
+      const accessToken = accessTokenFromSetCookie(
+        responseLogin.headers['set-cookie']
+      );
 
-      if (setCookieHeader) {
-        const accessToken = setCookieHeader[0]
-          .split(',')[0]
-          .split(';')[0]
-          .split('=')[1];
-
+      if (accessToken) {
         const responseUserData = await axios.get(
           `${instance}/api/user/profile`
         );
@@ -212,6 +256,7 @@ export function SessionProvider(props: React.PropsWithChildren<any>) {
         if (responseUserData.data.status === 'OK') {
           if (!isCurrentSession(generation)) return { success: false, errorStatus: 'GENERIC_ERROR' };
           setGuestAccess(false);
+          setSessionState('authenticated');
           const user = responseUserData.data.data as User;
           await selectOfflineContext(instance, user.id);
           await setUser(user);
@@ -271,6 +316,7 @@ export function SessionProvider(props: React.PropsWithChildren<any>) {
           await cancelSessionRequests();
           await NativeModules.ServerTransport.clearCookies();
           await setAccessToken(null);
+          setSessionState('none');
           await setUser(null);
           await setSelectedCompany(null);
           await setCompanies(null);
@@ -294,6 +340,7 @@ export function SessionProvider(props: React.PropsWithChildren<any>) {
     await cancelSessionRequests();
     await NativeModules.ServerTransport.clearCookies();
     await setAccessToken(null);
+    setSessionState('none');
     await setUser(null);
     await setSelectedCompany(null);
     await setCompanies(null);
@@ -310,6 +357,7 @@ export function SessionProvider(props: React.PropsWithChildren<any>) {
     allowSessionRequests(instance);
     await selectOfflineContext(instance, 0);
     setGuestAccess(true);
+    setSessionState('guest');
     await setUser(null);
     await setSelectedCompany(null);
     await setCompanies(null);
@@ -520,6 +568,7 @@ export function SessionProvider(props: React.PropsWithChildren<any>) {
         selectCompany: setSelectedCompany,
         makeRequest,
         accessToken,
+        sessionState,
         user,
         selectedCompany,
         companies,

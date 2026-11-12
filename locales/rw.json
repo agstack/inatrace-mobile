@@ -65,6 +65,16 @@
       "download": "Kumanura ikarita",
       "update": "Vugurura ikarita",
       "view": "Reba"
+    },
+    "sessionNotice": {
+      "none": "Injira kugira ngo ukomeze cyangwa ukoreshe uburyo bw'umushyitsi.",
+      "expired": "Igihe cyawe cyarangiye. Ongera winjire.",
+      "guest": "Uri gukoresha uburyo bw'umushyitsi.",
+      "logIn": "Injira",
+      "continueAsGuest": "Komeza nk'umushyitsi",
+      "openGuestArea": "Fungura ahantu h'umushyitsi",
+      "navLoginRequired": "Injira kugira ngo ukoreshe",
+      "navGuestArea": "Koresha ahantu h'umushyitsi"
     }
   },
   "farmers": {
