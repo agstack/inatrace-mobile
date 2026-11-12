@@ -106,6 +106,18 @@ See [Codemagic iOS signing](https://docs.codemagic.io/yaml-code-signing/signing-
 for managing certificates and provisioning profiles. Do not commit Apple keys,
 signing certificates, credentials, or private tokens.
 
+## Checks
+
+The same checks run in CI (`.github/workflows/ci.yml`) for every pull request and every push to `main`:
+
+```bash
+npm run lint       # ESLint (Expo's universe/native rules with Prettier)
+npm run typecheck  # tsc --noEmit
+npm run test:ci    # Jest, single run (`npm test` watches)
+```
+
+CI uses the Node version in `.nvmrc`.
+
 ## Building the App with EAS Build
 
 To create production-ready builds using Expo Application Services (EAS), follow these steps:
