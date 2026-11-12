@@ -1,7 +1,6 @@
 import { useNavigation } from 'expo-router';
 import {
   Check,
-  ChevronLeft,
   Download,
   Navigation,
   Trash,
@@ -37,6 +36,7 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import cn from '@/utils/cn';
 import type { Camera as CameraRef } from '@rnmapbox/maps';
 import Colors from '@/constants/Colors';
+import HeaderBackButton from '@/components/common/HeaderBackButton';
 import {
   applyProgress,
   shouldKeepPolling,
@@ -166,15 +166,11 @@ export default function MapDownload() {
     navigation.setOptions({
       title: i18n.t('plots.mapDownload'),
       headerLeft: () => (
-        <Pressable
+        <HeaderBackButton
           onPress={() =>
             selectingMap ? setSelectingMap(false) : navigation.goBack()
           }
-          className="flex flex-row justify-center items-center mr-3"
-        >
-          <ChevronLeft color={Colors.orange} />
-          <Text className="font-medium text-Orange text-[18px]">Back</Text>
-        </Pressable>
+        />
       ),
     });
   }, [selectingMap]);

@@ -3,8 +3,7 @@ import { ShadowButtonStyle } from '@/constants/Shadow';
 import { AuthContext } from '@/context/AuthContext';
 import i18n from '@/locales/i18n';
 import { ProductTypeWithCompanyId } from '@/types/farmer';
-import { router, useNavigation } from 'expo-router';
-import { ChevronLeft } from 'lucide-react-native';
+import { router } from 'expo-router';
 import { useContext, useEffect, useState } from 'react';
 import { View, Text, Pressable, Alert, ActivityIndicator } from 'react-native';
 import { KeyboardAwareScrollView } from 'react-native-keyboard-aware-scroll-view';
@@ -15,7 +14,6 @@ import { User } from '@/types/user';
 import { RequestParams } from '@/types/auth';
 import cn from '@/utils/cn';
 import { useSelectedFarmerState } from '@/state/state';
-import Colors from '@/constants/Colors';
 
 type PlotInto = {
   plotName: string;
@@ -85,8 +83,6 @@ export default function AddPlot() {
   const { selectedFarmer, setSelectedFarmer } = useSelectedFarmerState();
 
   const [loading, setLoading] = useState<boolean>(false);
-
-  const navigation = useNavigation();
 
   const updateState = (path: Array<string | number>, value: any) => {
     setPlotInfo((currentInfo) => {
@@ -175,20 +171,6 @@ export default function AddPlot() {
       }
     }
   }, [productTypes, selectedCompany]);
-
-  useEffect(() => {
-    navigation.setOptions({
-      headerLeft: () => (
-        <Pressable
-          onPress={() => navigation.goBack()}
-          className="flex flex-row justify-center items-center mr-3"
-        >
-          <ChevronLeft color={Colors.orange} />
-          <Text className="font-medium text-Orange text-[18px]">Back</Text>
-        </Pressable>
-      ),
-    });
-  }, []);
 
   const validateFields = () => {
     const errors: PlotInfoErrors = {
