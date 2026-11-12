@@ -144,6 +144,10 @@ For detailed instructions and troubleshooting, refer to the [official EAS Build 
 
 By following these instructions, you can effectively run and build the INATrace app locally, contributing to a more transparent and equitable global supply chain.
 
+## Contribution
+
+Project INATrace welcomes contribution from everyone. See [CONTRIBUTING.md](CONTRIBUTING.md) for help getting started.
+
 ## License
 
 Copyright (c) 2023 Antje ECG d.o.o., GIZ - Deutsche Gesellschaft für Internationale Zusammenarbeit GmbH, Sunesis ltd.
