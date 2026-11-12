@@ -3,7 +3,7 @@
   "compilerOptions": {
     "jsx": "react-native",
     "skipLibCheck": true,
-    "types": ["react", "react-native"],
+    "types": ["react", "react-native", "expo/types"],
     "strict": true,
     "paths": {
       "@/*": ["./*"]
