@@ -7,13 +7,13 @@ import Colors from '@/constants/Colors';
 
 export default function SyncDataButton() {
   return (
-    <Link href="/data-sync" className="mb-5" asChild>
+    <Link href="/data-sync" asChild>
       <Pressable>
         {({ pressed }) => (
           <View
             className={cn(
               pressed ? 'bg-LightOrange' : 'bg-Orange',
-              'flex flex-row justify-center items-center p-3 m-5 rounded-md'
+              'flex flex-row justify-center items-center p-3 mx-5 my-3 rounded-md'
             )}
           >
             <RefreshCw color={Colors.white} />

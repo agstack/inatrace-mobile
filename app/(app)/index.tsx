@@ -1,5 +1,5 @@
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { View } from 'react-native';
+import { ScrollView, View } from 'react-native';
 
 import Topbar from '@/components/common/Topbar';
 import HomeNavButton from '@/components/home/HomeNavButton';
@@ -37,38 +37,44 @@ export default function Home() {
 
   return (
     <SafeAreaView
-      className="flex flex-col justify-between h-full bg-Background"
-      edges={{ top: 'maximum' }}
+      className="flex flex-col h-full bg-Background"
+      edges={{ top: 'maximum', bottom: 'maximum' }}
     >
       <Topbar title={i18n.t('home.title')} />
-      <View className="flex flex-col">
-        <HomeNavButton
-          title={i18n.t('home.farmers')}
-          icon={FarmerSvg}
-          link="/(farmers)/farmers"
-          disabled={!authenticated}
-          hint={navHint}
-        />
-        <HomeNavButton
-          title={i18n.t('home.newPlot')}
-          icon={PlotSvg}
-          link="/(farmers)/newplot"
-          disabled={!authenticated}
-          hint={navHint}
-        />
-      </View>
-      <View>
-        <SessionNotice
-          state={sessionState}
-          onGuest={() => {
-            void logInGuest();
-          }}
-        />
-        <NetworkNotice networkState={networkState} />
-        <OfflineMapNotice status={offlineMapStatus} isConnected={isConnected} />
-        <View className="pb-5 border-t bg-White border-t-LightGray">
-          <SyncDataButton />
+      <ScrollView
+        className="flex-1"
+        contentContainerStyle={{ flexGrow: 1, justifyContent: 'space-between' }}
+        showsVerticalScrollIndicator={false}
+      >
+        <View className="flex flex-col">
+          <HomeNavButton
+            title={i18n.t('home.farmers')}
+            icon={FarmerSvg}
+            link="/(farmers)/farmers"
+            disabled={!authenticated}
+            hint={navHint}
+          />
+          <HomeNavButton
+            title={i18n.t('home.newPlot')}
+            icon={PlotSvg}
+            link="/(farmers)/newplot"
+            disabled={!authenticated}
+            hint={navHint}
+          />
         </View>
+        <View>
+          <SessionNotice
+            state={sessionState}
+            onGuest={() => {
+              void logInGuest();
+            }}
+          />
+          <NetworkNotice networkState={networkState} />
+          <OfflineMapNotice status={offlineMapStatus} isConnected={isConnected} />
+        </View>
+      </ScrollView>
+      <View className="border-t bg-White border-t-LightGray">
+        <SyncDataButton />
       </View>
     </SafeAreaView>
   );
