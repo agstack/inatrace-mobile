@@ -78,6 +78,8 @@
     }
   },
   "farmers": {
+    "offlineCached": "Birabwa abahinzi babitswe kuri iyi telefoni.",
+    "offlineNoCache": "Nta murandasi uhari kandi nta bahinzi babitswe kuri iyi telefoni. Huza n'umurandasi kugira ngo baboneke.",
     "title": "Abahinzi",
     "titleNewPlot": "Hitamo umuhinzi",
     "newFarmer": "Umuhinzi mushya",

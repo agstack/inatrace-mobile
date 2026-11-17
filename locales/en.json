@@ -78,6 +78,8 @@
     }
   },
   "farmers": {
+    "offlineCached": "Showing farmers saved on this device.",
+    "offlineNoCache": "You are offline and no farmers are saved on this device. Connect to the internet to load them.",
     "title": "Farmers",
     "titleNewPlot": "Choose farmer",
     "newFarmer": "New farmer",

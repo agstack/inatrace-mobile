@@ -22,6 +22,7 @@ import NewFarmerButton, {
 } from '@/components/farmers/NewFarmerButton';
 import { useLocalSearchParams, useSegments } from 'expo-router';
 import { emptyComponent } from '@/components/common/FlashListComponents';
+import { farmersListMessageKey, resolveFarmersListState } from '@/utils/farmersList';
 import realm from '@/realm/useRealm';
 import { FarmerSchema } from '@/realm/schemas';
 
@@ -33,7 +34,7 @@ export default function Farmers() {
 
   const [isLoading, setIsLoading] = useState<boolean>(true);
   const [isRefreshing, setIsRefreshing] = useState<boolean>(false);
-  const [error, setError] = useState<string>('');
+  const [failed, setFailed] = useState<boolean>(false);
   const [data, setData] = useState<CardProps[]>([]);
   const [dataCount, setDataCount] = useState<number>(100);
   const [preventOnEndReached, setPreventOnEndReached] =
@@ -42,7 +43,7 @@ export default function Farmers() {
   const [offset, setOffset] = useState<number>(0);
   const limit = 10;
 
-  const { isConnected, makeRequest, selectedCompany, user, guestAccess } =
+  const { isConnected, networkState, makeRequest, selectedCompany, user, guestAccess } =
     useContext(AuthContext);
 
   const segments = useSegments();
@@ -200,6 +201,8 @@ export default function Farmers() {
             : response.data.data.count + offlineData.length
         );
 
+        setFailed(false);
+
         if (resetData) {
           setData([...offlineData, ...farmers]);
           setOffset(0);
@@ -208,7 +211,7 @@ export default function Farmers() {
         }
       }
     } catch (error) {
-      setError(i18n.t('farmers.errorFetch'));
+      setFailed(true);
     } finally {
       setPreventOnEndReached(true);
       setIsRefreshing(false);
@@ -335,7 +338,17 @@ export default function Farmers() {
           keyExtractor={(_, index) => index.toString()}
           style={{ flex: 1 }}
           ListEmptyComponent={emptyComponent(
-            isLoading ? i18n.t('loading') : i18n.t('farmers.noData')
+            i18n.t(
+              farmersListMessageKey(
+                resolveFarmersListState({
+                  loading: isLoading,
+                  failed,
+                  offline: networkState === 'offline',
+                  itemCount: data.length,
+                  fromCache: false,
+                })
+              ) ?? 'farmers.noData'
+            )
           )}
           ListFooterComponent={renderFooter}
           onEndReached={onEndReached}
