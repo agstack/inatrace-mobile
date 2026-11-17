@@ -23,6 +23,7 @@ import NewFarmerButton, {
 import { useLocalSearchParams, useSegments } from 'expo-router';
 import { emptyComponent } from '@/components/common/FlashListComponents';
 import { farmersListMessageKey, resolveFarmersListState } from '@/utils/farmersList';
+import { farmerDisplayName, farmerGender, farmerVillageAndCell } from '@/utils/farmerCard';
 import realm from '@/realm/useRealm';
 import { FarmerSchema } from '@/realm/schemas';
 
@@ -131,17 +132,17 @@ export default function Farmers() {
       if (response.data.status === 'OK') {
         const farmers = response.data.data.items.map((farmer: Farmer) => {
           return {
-            title: `${farmer.name ?? ''} ${farmer.surname ?? ''}`,
+            title: farmerDisplayName(farmer),
             items: [
               {
                 type: 'view',
                 name: i18n.t('farmers.card.villageAndCell'),
-                value: `${farmer.location.address.village ? farmer.location.address.village : '/'}, ${farmer.location.address.cell ? farmer.location.address.cell : '/'}`,
+                value: farmerVillageAndCell(farmer),
               },
               {
                 type: 'view',
                 name: i18n.t('farmers.card.gender'),
-                value: farmer.gender,
+                value: farmerGender(farmer),
               },
             ] as ItemProps[],
             navigationPath:
@@ -171,18 +172,18 @@ export default function Farmers() {
         const offlineData = farmersRealmData.map(
           (farmer: { data: Farmer; synced: boolean }) => {
             return {
-              title: `${farmer.data.name ?? ''} ${farmer.data.surname ?? ''}`,
+              title: farmerDisplayName(farmer.data),
               synced: farmer.synced,
               items: [
                 {
                   type: 'view',
                   name: i18n.t('farmers.card.villageAndCell'),
-                  value: `${farmer.data.location.address.village}, ${farmer.data.location.address.cell}`,
+                  value: farmerVillageAndCell(farmer.data),
                 },
                 {
                   type: 'view',
                   name: i18n.t('farmers.card.gender'),
-                  value: farmer.data.gender,
+                  value: farmerGender(farmer.data),
                 },
               ] as ItemProps[],
               navigationPath:
@@ -245,18 +246,18 @@ export default function Farmers() {
       const offlineData = farmersRealmData.map(
         (farmer: { data: Farmer; synced: boolean }) => {
           return {
-            title: `${farmer.data.name ?? ''} ${farmer.data.surname ?? ''}`,
+            title: farmerDisplayName(farmer.data),
             synced: farmer.synced,
             items: [
               {
                 type: 'view',
                 name: i18n.t('farmers.card.villageAndCell'),
-                value: `${farmer.data.location.address.village}, ${farmer.data.location.address.cell}`,
+                value: farmerVillageAndCell(farmer.data),
               },
               {
                 type: 'view',
                 name: i18n.t('farmers.card.gender'),
-                value: farmer.data.gender,
+                value: farmerGender(farmer.data),
               },
             ] as ItemProps[],
             navigationPath:
