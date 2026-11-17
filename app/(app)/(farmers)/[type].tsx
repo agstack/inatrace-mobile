@@ -24,6 +24,11 @@ import { useLocalSearchParams, useSegments } from 'expo-router';
 import { emptyComponent } from '@/components/common/FlashListComponents';
 import { farmersListMessageKey, resolveFarmersListState } from '@/utils/farmersList';
 import { farmerDisplayName, farmerGender, farmerVillageAndCell } from '@/utils/farmerCard';
+import {
+  readLastFarmerCacheRefresh,
+  shouldRefreshFarmerCache,
+  writeLastFarmerCacheRefresh,
+} from '@/utils/farmerCache';
 import realm from '@/realm/useRealm';
 import { FarmerSchema } from '@/realm/schemas';
 
@@ -44,8 +49,15 @@ export default function Farmers() {
   const [offset, setOffset] = useState<number>(0);
   const limit = 10;
 
-  const { isConnected, networkState, makeRequest, selectedCompany, user, guestAccess } =
-    useContext(AuthContext);
+  const {
+    isConnected,
+    networkState,
+    makeRequest,
+    selectedCompany,
+    user,
+    guestAccess,
+    refreshFarmers,
+  } = useContext(AuthContext);
 
   const segments = useSegments();
 
@@ -99,6 +111,32 @@ export default function Farmers() {
       handleFarmers(limit, offset, false);
     }
   }, [offset]);
+
+  // The cache is only filled after login and on a manual refresh, so a device
+  // that stays signed in keeps a stale list. Refresh it when the list opens,
+  // but not on every navigation and never while offline.
+  useEffect(() => {
+    if (!user || guestAccess) return;
+
+    const run = async () => {
+      const cachedCount = await countCachedFarmers();
+      const refresh = shouldRefreshFarmerCache({
+        online: networkState === 'online',
+        cachedCount,
+        lastRefreshAt: await readLastFarmerCacheRefresh(),
+      });
+      if (!refresh) return;
+
+      await writeLastFarmerCacheRefresh(Date.now());
+      await refreshFarmers(user).catch(async () => {
+        // A failed refresh keeps the cache the screen already shows.
+        await writeLastFarmerCacheRefresh(null);
+      });
+    };
+
+    void run();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [networkState, selectedCompany]);
 
   const handleFarmers = async (
     limitHF: number,
@@ -217,6 +255,24 @@ export default function Farmers() {
       setPreventOnEndReached(true);
       setIsRefreshing(false);
       setIsLoading(false);
+    }
+  };
+
+  // Counts what the list would show offline, using the same filter as the read
+  // below so the two never disagree.
+  const countCachedFarmers = async (): Promise<number> => {
+    try {
+      const rows = await realm.realmRead(
+        FarmerSchema,
+        undefined,
+        undefined,
+        undefined,
+        'ASC',
+        `companyId == '${guestAccess ? '0' : selectedCompany}' AND userId == '${guestAccess ? '0' : user?.id}'`
+      );
+      return rows.length;
+    } catch {
+      return 0;
     }
   };
 
