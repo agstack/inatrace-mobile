@@ -53,6 +53,9 @@
     "logOut": "Log out"
   },
   "home": {
+    "networkNotice": {
+      "offline": "You are offline. Data already saved on this device is still available."
+    },
     "title": "Home",
     "farmers": "Farmers",
     "newPlot": "New plot",

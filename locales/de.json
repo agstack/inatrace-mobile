@@ -53,6 +53,9 @@
     "logOut": "Ausloggen"
   },
   "home": {
+    "networkNotice": {
+      "offline": "Sie sind offline. Bereits auf diesem Gerät gespeicherte Daten sind weiterhin verfügbar."
+    },
     "title": "Startseite",
     "farmers": "Bauern",
     "newPlot": "Neue Parzelle",

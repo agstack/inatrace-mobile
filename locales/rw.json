@@ -53,6 +53,9 @@
     "logOut": "Sohoka"
   },
   "home": {
+    "networkNotice": {
+      "offline": "Nta murandasi uhari. Amakuru yabitswe kuri iyi telefoni aracyaboneka."
+    },
     "title": "Ahabanza",
     "farmers": "Abahinzi",
     "newPlot": "Ikibanza gishya",

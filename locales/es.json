@@ -53,6 +53,9 @@
     "logOut": "Cerrar sesión"
   },
   "home": {
+    "networkNotice": {
+      "offline": "Está sin conexión. Los datos ya guardados en este dispositivo siguen disponibles."
+    },
     "title": "Inicio",
     "farmers": "Agricultores",
     "newPlot": "Nueva parcela",
