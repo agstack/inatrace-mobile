@@ -15,7 +15,6 @@ import {
   useState,
 } from 'react';
 import {
-  ActivityIndicator,
   Alert,
   KeyboardAvoidingView,
   Pressable,
@@ -43,6 +42,13 @@ import {
   toPackView,
   type OfflinePackView,
 } from '@/utils/offlinePacks';
+import {
+  boundsFromMapState,
+  boundsReady,
+  estimatePackSize,
+  zoomFromMapState,
+  type DownloadBounds,
+} from '@/utils/offlineBounds';
 
 Mapbox.setAccessToken(process.env.EXPO_PUBLIC_MAPBOX_ACCESS_TOKEN ?? '');
 
@@ -55,7 +61,7 @@ export default function MapDownload() {
   const [location, setLocation] = useState<LocationObject | null>(null);
 
   const [offlinePacks, setOfflinePacks] = useState<OfflinePackView[]>([]);
-  const [bounds, setBounds] = useState<any | null>(null);
+  const [bounds, setBounds] = useState<DownloadBounds | null>(null);
   const [estimatedSize, setEstimatedSize] = useState<number>(0);
   const [selectingMap, setSelectingMap] = useState<boolean>(false);
   const [downloadConfirm, setDownloadConfirm] = useState<boolean>(false);
@@ -217,36 +223,40 @@ export default function MapDownload() {
   }, [navigation, setDownloading]);
 
   const askForLocationPermission = async () => {
-    const { status } = await Location.requestForegroundPermissionsAsync();
+    try {
+      const { status } = await Location.requestForegroundPermissionsAsync();
 
-    if (status !== 'granted') {
-      Alert.alert(
-        i18n.t('plots.offlineMapsScreen.locationPermissionDeniedAlert'),
-        i18n.t('plots.offlineMapsScreen.locationPermissionDeniedAlertMessage')
+      if (status !== 'granted') {
+        Alert.alert(
+          i18n.t('plots.offlineMapsScreen.locationPermissionDeniedAlert'),
+          i18n.t('plots.offlineMapsScreen.locationPermissionDeniedAlertMessage')
+        );
+        return;
+      }
+
+      const currentLocation = await Location.getCurrentPositionAsync({
+        accuracy: Location.Accuracy.Balanced,
+      });
+      if (mountedRef.current) setLocation(currentLocation);
+    } catch {
+      // The map no longer depends on this call: without a fix it opens on the
+      // default region and the user can still pick the area to download. Fall
+      // back to the last known position so the camera still starts nearby.
+      const lastKnown = await Location.getLastKnownPositionAsync().catch(
+        () => null
       );
-      return;
-    }
-
-    let currentLocation = await Location.getCurrentPositionAsync({});
-    setLocation(currentLocation);
-  };
-
-  const onRegionDidChange = async () => {
-    if (mapRef.current) {
-      const visibleBounds = await mapRef.current.getVisibleBounds();
-      const zoomLevel = await mapRef.current.getZoom();
-      setBounds(visibleBounds);
-      estimateOfflinePackSize(zoomLevel);
+      if (mountedRef.current && lastKnown) setLocation(lastKnown);
     }
   };
 
-  const estimateOfflinePackSize = (zoomLevel: number) => {
-    if (zoomLevel < 13) {
-      setEstimatedSize(parseFloat((Math.abs(20 - zoomLevel) * 20).toFixed(2)));
-    } else if (zoomLevel < 14) {
-      setEstimatedSize(parseFloat((Math.abs(20 - zoomLevel) * 10).toFixed(2)));
-    } else {
-      setEstimatedSize(parseFloat((Math.abs(20 - zoomLevel) * 6).toFixed(2)));
+  // The event carries the visible bounds and the zoom level, so the screen does
+  // not need an extra native round trip to know which area is visible.
+  const onMapIdle = (state: unknown) => {
+    const nextBounds = boundsFromMapState(state);
+    if (nextBounds) setBounds(nextBounds);
+    const zoomLevel = zoomFromMapState(state);
+    if (zoomLevel !== null && zoomLevel > 0) {
+      setEstimatedSize(estimatePackSize(zoomLevel));
     }
   };
 
@@ -256,7 +266,7 @@ export default function MapDownload() {
       return;
     }
 
-    if (!bounds) {
+    if (!boundsReady(bounds)) {
       Alert.alert(
         i18n.t('plots.offlineMapsScreen.noAreaSelected'),
         i18n.t('plots.offlineMapsScreen.noAreaSelectedMessage')
@@ -405,16 +415,16 @@ export default function MapDownload() {
               {i18n.t('plots.offlineMapsScreen.downloadThisMap')}
             </Text>
           </View>
-          {location ? (
-            <View className="flex-1">
-              <Mapbox.MapView
-                className="border-[5px] border-blue-500"
-                style={{ flex: 1 }}
-                ref={mapRef}
-                onMapIdle={onRegionDidChange}
-                styleURL={Mapbox.StyleURL.SatelliteStreet}
-                onDidFinishLoadingMap={() => focusOnCurrentLocation()}
-              >
+          <View className="flex-1">
+            <Mapbox.MapView
+              className="border-[5px] border-blue-500"
+              style={{ flex: 1 }}
+              ref={mapRef}
+              onRegionDidChange={onMapIdle}
+              styleURL={Mapbox.StyleURL.SatelliteStreet}
+              onDidFinishLoadingMap={() => focusOnCurrentLocation()}
+            >
+              {location && (
                 <Mapbox.Camera
                   zoomLevel={14}
                   minZoomLevel={10}
@@ -424,6 +434,8 @@ export default function MapDownload() {
                   ]}
                   ref={cameraRef}
                 />
+              )}
+              {location && (
                 <Mapbox.PointAnnotation
                   coordinate={[
                     location.coords.longitude,
@@ -435,7 +447,9 @@ export default function MapDownload() {
                     <View className="w-4 h-4 bg-blue-500 rounded-full" />
                   </View>
                 </Mapbox.PointAnnotation>
-              </Mapbox.MapView>
+              )}
+            </Mapbox.MapView>
+            {location && (
               <Pressable
                 className="flex absolute right-5 bottom-5 flex-row justify-center items-center w-16 h-16 rounded-full border-2 border-blue-500 bg-White"
                 onPress={focusOnCurrentLocation}
@@ -443,13 +457,8 @@ export default function MapDownload() {
               >
                 <Navigation color="#3b82f6" size={30} />
               </Pressable>
-            </View>
-          ) : (
-            <View className="flex flex-col flex-1 justify-center items-center w-full h-full bg-White">
-              <ActivityIndicator size="large" animating={true} />
-              <Text className="mt-2">{i18n.t('plots.mapLoading')}</Text>
-            </View>
-          )}
+            )}
+          </View>
           <Text className="px-5 my-3 bg-White">
             {i18n.t('plots.offlineMapsScreen.sizeWarning', {
               size: estimatedSize,
