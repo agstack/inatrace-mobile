@@ -159,6 +159,34 @@ const realmDeleteAll = async (schema: any, filter?: string) => {
   }
 };
 
+/**
+ * Deletes the rows that match `filter` and writes the new ones in the same
+ * transaction. Used to rebuild the farmer cache from the API: either the new
+ * snapshot replaces the old one completely or nothing changes.
+ */
+const realmReplaceAll = async (schema: any, filter: string, data: any[]) => {
+  const { realm, check } = await openScoped(schema);
+
+  try {
+    check();
+    realm.write(() => {
+      let objects = realm.objects(schema.name);
+      if (filter && filter.trim() !== '') {
+        objects = objects.filtered(filter);
+      }
+      realm.delete(objects);
+      data.forEach((item) => {
+        realm.create(schema.name, item, Realm.UpdateMode.Modified);
+      });
+    });
+  } catch (error) {
+    console.error('Failed to replace objects in the Realm database:', error);
+    throw error;
+  } finally {
+    realm.close();
+  }
+};
+
 export default {
   realmWrite,
   realmWriteMultiple,
@@ -166,4 +194,5 @@ export default {
   realmRead,
   realmDeleteOne,
   realmDeleteAll,
+  realmReplaceAll,
 };

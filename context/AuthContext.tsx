@@ -7,7 +7,7 @@ import axios from 'axios';
 import ReactNativeBlobUtil from 'react-native-blob-util';
 
 import { LogInResponse, RequestParams } from '@/types/auth';
-import { Farmer, ProductType, ProductTypeWithCompanyId } from '@/types/farmer';
+import { ProductType, ProductTypeWithCompanyId } from '@/types/farmer';
 import { CompanyInfo } from '@/types/company';
 import { Country } from '@/types/country';
 import uuid from 'react-native-uuid';
@@ -19,11 +19,12 @@ import { FarmerSchema } from '@/realm/schemas';
 import guestCountries from '@/context/guestCountries.json';
 import guestProductTypes from '@/context/guestProductTypes.json';
 import { useSelectedFarmerState } from '@/state/state';
-import { NativeModules } from 'react-native';
+import { NativeModules, AppState } from 'react-native';
 import { getItemAsync } from 'expo-secure-store';
 import { clearOfflineContext, currentOfflinePath, selectOfflineContext } from '@/realm/context';
 import { allowSessionRequests, cancelSessionRequests, isCurrentSession, sessionGeneration } from '@/utils/sessionRequests';
 import { accessTokenFromSetCookie } from '@/utils/session';
+import { syncFarmerCache } from '@/utils/farmerSync';
 
 const imageDirectoryJobs = new Map<string, Promise<void>>();
 
@@ -168,8 +169,16 @@ export function SessionProvider(props: React.PropsWithChildren<any>) {
   const [newPlot, setNewPlot] = useState<Plot | null>(null);
   const renderGeneration = sessionGeneration();
 
+  // Reads NetInfo on demand and keeps the shared state in sync, so the session
+  // check and the foreground refresh agree on what "online" means.
+  const readNetworkState = async (): Promise<NetworkState> => {
+    const state = resolveNetworkState(await NetInfo.fetch());
+    setNetworkState(state);
+    return state;
+  };
+
   const checkAuth = async (): Promise<boolean> => {
-    const connected = canReachNetwork(resolveNetworkState(await NetInfo.fetch()));
+    const connected = canReachNetwork(await readNetworkState());
     // A cached authenticated session must remain usable offline, but the
     // Realm context is held in memory and has to be restored after a cold
     // start too. Always prefer the persisted account/server: the state hooks
@@ -268,7 +277,9 @@ export function SessionProvider(props: React.PropsWithChildren<any>) {
 
           await fetchProductTypes(user);
           await fetchCountries();
-          await fetchFarmers(user);
+          // The farmer cache is a convenience for offline use; a failed sync
+          // must not fail the login that already succeeded.
+          await fetchFarmers(user).catch(() => undefined);
 
           const companyDetailsPromises = user.companyIds.map((companyId) =>
             axios.get(`${instance}/api/company/profile/${companyId}`)
@@ -450,7 +461,7 @@ export function SessionProvider(props: React.PropsWithChildren<any>) {
     }
   };
 
-  const makeRequest = async ({ url, method, body, headers }: RequestParams) => {
+  const makeRequest = async ({ url, method, body, headers, timeout }: RequestParams) => {
     if (!isCurrentSession(renderGeneration)) throw new Error('Session changed');
     if (isTokenExpired(accessToken ?? '')) {
       await logOut();
@@ -467,6 +478,7 @@ export function SessionProvider(props: React.PropsWithChildren<any>) {
         Expires: '0',
       },
       data: body,
+      timeout,
     });
     if (!isCurrentSession(generation)) throw new Error('Session changed');
     return response;
@@ -509,48 +521,33 @@ export function SessionProvider(props: React.PropsWithChildren<any>) {
   const fetchFarmers = async (user: User) => {
     const generation = sessionGeneration();
     const path = currentOfflinePath();
-    await realm.realmDeleteAll(FarmerSchema, 'synced == true');
-    const farmersPromises = user.companyIds.map((companyId) =>
-      axios
-        .get(
-          `${instance}/api/company/userCustomers/${companyId}/FARMER?limit=5000`
-        )
-        .then((response) => ({ response, companyId }))
-    );
-    const farmersResponses = await Promise.all(farmersPromises);
 
-    const farmers = farmersResponses.map(async ({ response, companyId }) => {
-      if (response.data.status === 'OK') {
-        return {
-          companyId,
-          farmers: response.data.data.items as Farmer[],
-        };
-      }
+    // Fetch every company before touching the Realm: a failed request must
+    // leave the cache that the list shows untouched.
+    await syncFarmerCache({
+      userId: user.id,
+      companyIds: user.companyIds,
+      instance,
+      request: (url) => axios.get(url),
+      replace: async (records) => {
+        if (isCurrentSession(generation) && currentOfflinePath() === path) {
+          await realm.realmReplaceAll(FarmerSchema, 'synced == true', records);
+        }
+      },
     });
-
-    const farmersResp = await Promise.all(farmers);
-    const farmersRealm: any = [];
-
-    farmersResp.forEach((company) => {
-      company?.farmers?.forEach((farmer) => {
-        const farmerRealm = {
-          id: farmer.id ? farmer.id.toString() : '',
-          userId: user.id ? user.id.toString() : '',
-          companyId: company?.companyId ? company?.companyId.toString() : '',
-          data: JSON.stringify(farmer),
-          name: farmer.name ? farmer.name : '',
-          surname: farmer.surname ? farmer.surname : '',
-          synced: true,
-        };
-
-        farmersRealm.push(farmerRealm);
-      });
-    });
-
-    if (isCurrentSession(generation) && currentOfflinePath() === path) {
-      await realm.realmWriteMultiple(FarmerSchema, farmersRealm);
-    }
   };
+
+  useEffect(() => {
+    // NetInfo can stay with the state from before the app went to the
+    // background; recheck when the user comes back so the list decides
+    // between the API and the cache with fresh information.
+    const subscription = AppState.addEventListener('change', (state) => {
+      if (state === 'active') void readNetworkState();
+    });
+    return () => {
+      subscription.remove();
+    };
+  }, []);
 
   useEffect(() => {
     const unsubscribe = NetInfo.addEventListener((state) => {

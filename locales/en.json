@@ -83,6 +83,8 @@
   "farmers": {
     "offlineCached": "Showing farmers saved on this device.",
     "offlineNoCache": "You are offline and no farmers are saved on this device. Connect to the internet to load them.",
+    "staleCached": "Could not update the list. Showing farmers saved on this device.",
+    "retry": "Try again",
     "title": "Farmers",
     "titleNewPlot": "Choose farmer",
     "newFarmer": "New farmer",
