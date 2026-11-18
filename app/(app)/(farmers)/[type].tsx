@@ -22,6 +22,13 @@ import NewFarmerButton, {
 } from '@/components/farmers/NewFarmerButton';
 import { useLocalSearchParams, useSegments } from 'expo-router';
 import { emptyComponent } from '@/components/common/FlashListComponents';
+import { farmersListMessageKey, resolveFarmersListState } from '@/utils/farmersList';
+import { farmerDisplayName, farmerGender, farmerVillageAndCell } from '@/utils/farmerCard';
+import {
+  readLastFarmerCacheRefresh,
+  shouldRefreshFarmerCache,
+  writeLastFarmerCacheRefresh,
+} from '@/utils/farmerCache';
 import realm from '@/realm/useRealm';
 import { FarmerSchema } from '@/realm/schemas';
 
@@ -33,7 +40,7 @@ export default function Farmers() {
 
   const [isLoading, setIsLoading] = useState<boolean>(true);
   const [isRefreshing, setIsRefreshing] = useState<boolean>(false);
-  const [error, setError] = useState<string>('');
+  const [failed, setFailed] = useState<boolean>(false);
   const [data, setData] = useState<CardProps[]>([]);
   const [dataCount, setDataCount] = useState<number>(100);
   const [preventOnEndReached, setPreventOnEndReached] =
@@ -42,8 +49,15 @@ export default function Farmers() {
   const [offset, setOffset] = useState<number>(0);
   const limit = 10;
 
-  const { isConnected, makeRequest, selectedCompany, user, guestAccess } =
-    useContext(AuthContext);
+  const {
+    isConnected,
+    networkState,
+    makeRequest,
+    selectedCompany,
+    user,
+    guestAccess,
+    refreshFarmers,
+  } = useContext(AuthContext);
 
   const segments = useSegments();
 
@@ -98,6 +112,32 @@ export default function Farmers() {
     }
   }, [offset]);
 
+  // The cache is only filled after login and on a manual refresh, so a device
+  // that stays signed in keeps a stale list. Refresh it when the list opens,
+  // but not on every navigation and never while offline.
+  useEffect(() => {
+    if (!user || guestAccess) return;
+
+    const run = async () => {
+      const cachedCount = await countCachedFarmers();
+      const refresh = shouldRefreshFarmerCache({
+        online: networkState === 'online',
+        cachedCount,
+        lastRefreshAt: await readLastFarmerCacheRefresh(),
+      });
+      if (!refresh) return;
+
+      await writeLastFarmerCacheRefresh(Date.now());
+      await refreshFarmers(user).catch(async () => {
+        // A failed refresh keeps the cache the screen already shows.
+        await writeLastFarmerCacheRefresh(null);
+      });
+    };
+
+    void run();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [networkState, selectedCompany]);
+
   const handleFarmers = async (
     limitHF: number,
     offsetHF: number,
@@ -130,17 +170,17 @@ export default function Farmers() {
       if (response.data.status === 'OK') {
         const farmers = response.data.data.items.map((farmer: Farmer) => {
           return {
-            title: `${farmer.name ?? ''} ${farmer.surname ?? ''}`,
+            title: farmerDisplayName(farmer),
             items: [
               {
                 type: 'view',
                 name: i18n.t('farmers.card.villageAndCell'),
-                value: `${farmer.location.address.village ? farmer.location.address.village : '/'}, ${farmer.location.address.cell ? farmer.location.address.cell : '/'}`,
+                value: farmerVillageAndCell(farmer),
               },
               {
                 type: 'view',
                 name: i18n.t('farmers.card.gender'),
-                value: farmer.gender,
+                value: farmerGender(farmer),
               },
             ] as ItemProps[],
             navigationPath:
@@ -170,18 +210,18 @@ export default function Farmers() {
         const offlineData = farmersRealmData.map(
           (farmer: { data: Farmer; synced: boolean }) => {
             return {
-              title: `${farmer.data.name ?? ''} ${farmer.data.surname ?? ''}`,
+              title: farmerDisplayName(farmer.data),
               synced: farmer.synced,
               items: [
                 {
                   type: 'view',
                   name: i18n.t('farmers.card.villageAndCell'),
-                  value: `${farmer.data.location.address.village}, ${farmer.data.location.address.cell}`,
+                  value: farmerVillageAndCell(farmer.data),
                 },
                 {
                   type: 'view',
                   name: i18n.t('farmers.card.gender'),
-                  value: farmer.data.gender,
+                  value: farmerGender(farmer.data),
                 },
               ] as ItemProps[],
               navigationPath:
@@ -200,6 +240,8 @@ export default function Farmers() {
             : response.data.data.count + offlineData.length
         );
 
+        setFailed(false);
+
         if (resetData) {
           setData([...offlineData, ...farmers]);
           setOffset(0);
@@ -208,11 +250,29 @@ export default function Farmers() {
         }
       }
     } catch (error) {
-      setError(i18n.t('farmers.errorFetch'));
+      setFailed(true);
     } finally {
       setPreventOnEndReached(true);
       setIsRefreshing(false);
       setIsLoading(false);
+    }
+  };
+
+  // Counts what the list would show offline, using the same filter as the read
+  // below so the two never disagree.
+  const countCachedFarmers = async (): Promise<number> => {
+    try {
+      const rows = await realm.realmRead(
+        FarmerSchema,
+        undefined,
+        undefined,
+        undefined,
+        'ASC',
+        `companyId == '${guestAccess ? '0' : selectedCompany}' AND userId == '${guestAccess ? '0' : user?.id}'`
+      );
+      return rows.length;
+    } catch {
+      return 0;
     }
   };
 
@@ -242,18 +302,18 @@ export default function Farmers() {
       const offlineData = farmersRealmData.map(
         (farmer: { data: Farmer; synced: boolean }) => {
           return {
-            title: `${farmer.data.name ?? ''} ${farmer.data.surname ?? ''}`,
+            title: farmerDisplayName(farmer.data),
             synced: farmer.synced,
             items: [
               {
                 type: 'view',
                 name: i18n.t('farmers.card.villageAndCell'),
-                value: `${farmer.data.location.address.village}, ${farmer.data.location.address.cell}`,
+                value: farmerVillageAndCell(farmer.data),
               },
               {
                 type: 'view',
                 name: i18n.t('farmers.card.gender'),
-                value: farmer.data.gender,
+                value: farmerGender(farmer.data),
               },
             ] as ItemProps[],
             navigationPath:
@@ -335,7 +395,17 @@ export default function Farmers() {
           keyExtractor={(_, index) => index.toString()}
           style={{ flex: 1 }}
           ListEmptyComponent={emptyComponent(
-            isLoading ? i18n.t('loading') : i18n.t('farmers.noData')
+            i18n.t(
+              farmersListMessageKey(
+                resolveFarmersListState({
+                  loading: isLoading,
+                  failed,
+                  offline: networkState === 'offline',
+                  itemCount: data.length,
+                  fromCache: false,
+                })
+              ) ?? 'farmers.noData'
+            )
           )}
           ListFooterComponent={renderFooter}
           onEndReached={onEndReached}

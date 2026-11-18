@@ -2,6 +2,7 @@ import { createContext, useEffect, useState } from 'react';
 import { useStorageState } from './useStorageState';
 import { User } from '@/types/user';
 import NetInfo, { NetInfoState } from '@react-native-community/netinfo';
+import { canReachNetwork, resolveNetworkState, type NetworkState } from '@/utils/network';
 import axios from 'axios';
 import ReactNativeBlobUtil from 'react-native-blob-util';
 
@@ -55,6 +56,7 @@ export const AuthContext = createContext<{
   countries: Country[] | string | null;
   guestAccess: boolean;
   isConnected: boolean;
+  networkState: NetworkState;
   newPlot: Plot | null;
   documentationModal: boolean;
 }>({
@@ -78,6 +80,7 @@ export const AuthContext = createContext<{
   countries: null,
   guestAccess: false,
   isConnected: false,
+  networkState: 'unknown',
   newPlot: null,
   documentationModal: false,
 });
@@ -160,12 +163,13 @@ export function SessionProvider(props: React.PropsWithChildren<any>) {
   // They were racing with the values fetched during login and overwriting them
   // on the next app start. logInGuest sets both lists explicitly.
 
-  const [isConnected, setIsConnected] = useState<boolean>(false);
+  const [networkState, setNetworkState] = useState<NetworkState>('unknown');
+  const isConnected = networkState === 'online';
   const [newPlot, setNewPlot] = useState<Plot | null>(null);
   const renderGeneration = sessionGeneration();
 
   const checkAuth = async (): Promise<boolean> => {
-    const connected = (await NetInfo.fetch()).isConnected;
+    const connected = canReachNetwork(resolveNetworkState(await NetInfo.fetch()));
     // A cached authenticated session must remain usable offline, but the
     // Realm context is held in memory and has to be restored after a cold
     // start too. Always prefer the persisted account/server: the state hooks
@@ -550,7 +554,7 @@ export function SessionProvider(props: React.PropsWithChildren<any>) {
 
   useEffect(() => {
     const unsubscribe = NetInfo.addEventListener((state) => {
-      setIsConnected(state?.isConnected ?? false);
+      setNetworkState(resolveNetworkState(state));
     });
     return () => {
       unsubscribe();
@@ -575,6 +579,7 @@ export function SessionProvider(props: React.PropsWithChildren<any>) {
         productTypes,
         countries,
         isConnected,
+        networkState,
         newPlot,
         setNewPlot,
         instance,

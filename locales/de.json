@@ -53,6 +53,9 @@
     "logOut": "Ausloggen"
   },
   "home": {
+    "networkNotice": {
+      "offline": "Sie sind offline. Bereits auf diesem Gerät gespeicherte Daten sind weiterhin verfügbar."
+    },
     "title": "Startseite",
     "farmers": "Bauern",
     "newPlot": "Neue Parzelle",
@@ -78,6 +81,8 @@
     }
   },
   "farmers": {
+    "offlineCached": "Gespeicherte Bauern werden angezeigt.",
+    "offlineNoCache": "Sie sind offline und auf diesem Gerät sind keine Bauern gespeichert. Stellen Sie eine Internetverbindung her, um sie zu laden.",
     "title": "Bauern",
     "titleNewPlot": "Landwirt auswählen",
     "newFarmer": "Neuer Bauer",

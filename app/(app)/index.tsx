@@ -4,6 +4,7 @@ import { View } from 'react-native';
 import Topbar from '@/components/common/Topbar';
 import HomeNavButton from '@/components/home/HomeNavButton';
 import OfflineMapNotice from '@/components/home/OfflineMapNotice';
+import NetworkNotice from '@/components/home/NetworkNotice';
 import SessionNotice from '@/components/home/SessionNotice';
 import FarmerSvg from '@/components/svg/FarmerSvg';
 import PlotSvg from '@/components/svg/PlotSvg';
@@ -16,7 +17,8 @@ import { useOfflineMapStatus } from '@/hooks/useOfflineMapStatus';
 
 export default function Home() {
   const [_, setLocale] = useState(i18n.locale);
-  const { isConnected, sessionState, logInGuest } = useContext(AuthContext);
+  const { isConnected, networkState, sessionState, logInGuest } =
+    useContext(AuthContext);
   const offlineMapStatus = useOfflineMapStatus();
 
   const authenticated = sessionState === 'authenticated';
@@ -62,6 +64,7 @@ export default function Home() {
             void logInGuest();
           }}
         />
+        <NetworkNotice networkState={networkState} />
         <OfflineMapNotice status={offlineMapStatus} isConnected={isConnected} />
         <View className="pb-5 border-t bg-White border-t-LightGray">
           <SyncDataButton />
