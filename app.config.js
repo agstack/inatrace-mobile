@@ -5,7 +5,7 @@ export default ({ config }) => ({
     ...config.expo,
     name: 'INATrace',
     slug: 'inatrace-mobile',
-    version: '1.20.0',
+    version: '3.0.0',
     orientation: 'portrait',
     icon: './assets/images/icon.png',
     scheme: 'myapp',
