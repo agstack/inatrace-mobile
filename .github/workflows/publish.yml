@@ -1,0 +1,126 @@
+# Phase 4: a maintainer published a draft created by release.yml. Starts the production
+# builds of the tagged commit on EAS, when the repository is set up for it, and links
+# them from the release. Store submission stays a manual step. See RELEASE.md.
+name: "Release: publish (on draft published)"
+run-name: Publish ${{ github.event.release.tag_name }}
+
+on:
+  release:
+    types: [published]
+
+concurrency:
+  group: publish
+  cancel-in-progress: false
+
+permissions:
+  contents: read
+
+# Explicit bash runs steps with -eo pipefail (the implicit default has no pipefail).
+defaults:
+  run:
+    shell: bash
+
+jobs:
+  publish:
+    name: Publish
+    runs-on: ubuntu-26.04
+    timeout-minutes: 15
+    permissions:
+      contents: write # link the builds from the release notes
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          fetch-depth: 0
+
+      - name: Validate release
+        id: check
+        env:
+          TAG: ${{ github.event.release.tag_name }}
+          PRERELEASE: ${{ github.event.release.prerelease }}
+          EXPO_TOKEN: ${{ secrets.EXPO_TOKEN }}
+        run: |
+          [[ "$TAG" == v* ]] || { echo "::error::Tag $TAG does not start with v"; exit 1; }
+          version="${TAG#v}"
+          mapfile -t published < <(git tag -l 'v*')
+          python3 .github/scripts/release.py validate "$version" --published-self "${published[@]}"
+          committed="$(git show "$TAG^{commit}:package.json" | node -p "JSON.parse(require('fs').readFileSync(0, 'utf8')).version")"
+          python3 .github/scripts/release.py app-version "$version" "$committed"
+          expected=$([[ "$version" == *-rc.* ]] && echo true || echo false)
+          if [ "$PRERELEASE" != "$expected" ]; then
+            echo "::error::$TAG must be published with pre-release=$expected"
+            exit 1
+          fi
+          {
+            echo "version=$version"
+            echo "commit=$(git rev-parse "$TAG^{commit}")"
+            echo "eas=$([ -n "$EXPO_TOKEN" ] && echo true || echo false)"
+          } >> "$GITHUB_OUTPUT"
+
+      - name: Check out the tagged commit
+        uses: actions/checkout@v7
+        with:
+          ref: ${{ steps.check.outputs.commit }}
+
+      - if: steps.check.outputs.eas == 'true'
+        uses: actions/setup-node@v7
+        with:
+          node-version-file: .nvmrc
+          cache: npm
+
+      - if: steps.check.outputs.eas == 'true'
+        uses: expo/expo-github-action@v8
+        with:
+          eas-version: latest
+          token: ${{ secrets.EXPO_TOKEN }}
+
+      - name: Install
+        if: steps.check.outputs.eas == 'true'
+        run: npm ci --no-audit --no-fund
+
+      # The production profile builds an app bundle for Android and an archive for iOS,
+      # with the build numbers EAS keeps (appVersionSource remote, autoIncrement).
+      - name: Start the production builds
+        id: eas
+        if: steps.check.outputs.eas == 'true'
+        env:
+          VERSION: ${{ steps.check.outputs.version }}
+        run: |
+          eas build --profile production --platform all --non-interactive --no-wait \
+            --message "v$VERSION" | tee eas.log
+          {
+            echo "links<<EOF"
+            grep -o 'https://expo.dev/[^ ]*' eas.log | sort -u
+            echo "EOF"
+          } >> "$GITHUB_OUTPUT"
+
+      - name: Link the builds from the release
+        if: steps.check.outputs.eas == 'true'
+        env:
+          GH_TOKEN: ${{ github.token }}
+          TAG: ${{ github.event.release.tag_name }}
+          LINKS: ${{ steps.eas.outputs.links }}
+        run: |
+          gh release view "$TAG" --repo "$GITHUB_REPOSITORY" --json body --jq .body > notes.md
+          {
+            echo
+            echo "## Production builds"
+            echo
+            echo "Started on EAS from this tag; submit them to the stores once tested:"
+            while read -r link; do [ -n "$link" ] && echo "- $link"; done <<< "$LINKS"
+          } >> notes.md
+          if [ -n "$ACT" ]; then
+            echo "act: would run gh release edit $TAG --notes-file notes.md"
+          else
+            gh release edit "$TAG" --repo "$GITHUB_REPOSITORY" --notes-file notes.md
+          fi
+
+      - name: No EAS token
+        if: steps.check.outputs.eas != 'true'
+        run: |
+          {
+            echo "## Builds"
+            echo
+            echo "The repository has no \`EXPO_TOKEN\` secret, so no build was started. Build the tagged"
+            echo "commit by hand: \`eas build --profile production --platform all\` or the Codemagic"
+            echo "\`ios-testflight\` workflow. See RELEASE.md."
+          } >> "$GITHUB_STEP_SUMMARY"

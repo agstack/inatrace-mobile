@@ -1,0 +1,146 @@
+# Phase 3: prepares a release from the current main. See RELEASE.md.
+#   gh workflow run release.yml -f version=1.21.0-rc.1
+name: "Release: prepare (manual)"
+run-name: Prepare release ${{ inputs.version }}
+
+on:
+  workflow_dispatch:
+    inputs:
+      version:
+        description: Version to release, X.Y.Z or X.Y.Z-rc.N (no leading v); X.Y.Z must be the version in package.json
+        required: true
+        type: string
+
+concurrency:
+  group: release
+  cancel-in-progress: false
+
+permissions:
+  contents: read
+
+# Explicit bash runs steps with -eo pipefail (the implicit default has no pipefail).
+defaults:
+  run:
+    shell: bash
+
+jobs:
+  prepare:
+    name: Validate version
+    runs-on: ubuntu-26.04
+    timeout-minutes: 5
+    outputs:
+      commit: ${{ steps.check.outputs.commit }}
+      notes-start: ${{ steps.check.outputs.notes-start }}
+      prerelease: ${{ steps.check.outputs.prerelease }}
+      eas: ${{ steps.check.outputs.eas }}
+    steps:
+      - name: Require main
+        if: github.ref != 'refs/heads/main'
+        run: |
+          echo "::error::Releases are cut from main; this run is on $GITHUB_REF."
+          exit 1
+
+      - uses: actions/checkout@v7
+        with:
+          fetch-depth: 0
+
+      - name: Validate
+        id: check
+        env:
+          VERSION: ${{ inputs.version }}
+          EXPO_TOKEN: ${{ secrets.EXPO_TOKEN }}
+        run: |
+          mapfile -t published < <(git tag -l 'v*')
+          python3 .github/scripts/release.py validate "$VERSION" "${published[@]}"
+          # The app version is committed (package.json, app.config.js) because Expo and the
+          # stores read it from the code: the release must be that version.
+          python3 .github/scripts/release.py app-version "$VERSION" "$(node -p "require('./package.json').version")"
+          # Release notes can only start from a tag in this commit's history.
+          mapfile -t merged < <(git tag -l 'v*' --merged HEAD)
+          {
+            echo "commit=$(git rev-parse HEAD)"
+            echo "notes-start=$(python3 .github/scripts/release.py notes-start "$VERSION" "${merged[@]}")"
+            echo "prerelease=$([[ "$VERSION" == *-rc.* ]] && echo true || echo false)"
+            # EAS builds run only where the repository has an EXPO_TOKEN secret.
+            echo "eas=$([ -n "$EXPO_TOKEN" ] && echo true || echo false)"
+          } >> "$GITHUB_OUTPUT"
+
+  test:
+    needs: prepare
+    uses: ./.github/workflows/_test.yml
+    with:
+      ref: ${{ needs.prepare.outputs.commit }}
+
+  # An internal-distribution Android build of the release commit, for testers, started
+  # on EAS and not waited for: its page is linked from the draft.
+  build:
+    name: Android preview build (EAS)
+    needs: [prepare, test]
+    if: needs.prepare.outputs.eas == 'true'
+    runs-on: ubuntu-26.04
+    timeout-minutes: 15
+    outputs:
+      links: ${{ steps.eas.outputs.links }}
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          ref: ${{ needs.prepare.outputs.commit }}
+
+      - uses: actions/setup-node@v7
+        with:
+          node-version-file: .nvmrc
+          cache: npm
+
+      - uses: expo/expo-github-action@v8
+        with:
+          eas-version: latest
+          token: ${{ secrets.EXPO_TOKEN }}
+
+      - name: Install
+        run: npm ci --no-audit --no-fund
+
+      - name: Start the build
+        id: eas
+        env:
+          VERSION: ${{ inputs.version }}
+        run: |
+          eas build --profile preview --platform android --non-interactive --no-wait \
+            --message "v$VERSION" | tee eas.log
+          {
+            echo "links<<EOF"
+            grep -o 'https://expo.dev/[^ ]*' eas.log | sort -u
+            echo "EOF"
+          } >> "$GITHUB_OUTPUT"
+
+  draft:
+    name: Draft release
+    needs: [prepare, test, build]
+    # Runs with or without the optional build, never after a failure.
+    if: always() && needs.prepare.result == 'success' && needs.test.result == 'success' && contains(fromJSON('["success", "skipped"]'), needs.build.result)
+    runs-on: ubuntu-26.04
+    timeout-minutes: 5
+    permissions:
+      contents: write
+    steps:
+      - name: Create draft
+        env:
+          GH_TOKEN: ${{ github.token }}
+          TAG: v${{ inputs.version }}
+          COMMIT: ${{ needs.prepare.outputs.commit }}
+          NOTES_START: ${{ needs.prepare.outputs.notes-start }}
+          PRERELEASE: ${{ needs.prepare.outputs.prerelease }}
+          LINKS: ${{ needs.build.outputs.links }}
+        run: |
+          args=(--repo "$GITHUB_REPOSITORY" --target "$COMMIT" --title "$TAG" --draft --generate-notes)
+          [ -n "$NOTES_START" ] && args+=(--notes-start-tag "$NOTES_START")
+          [ "$PRERELEASE" = true ] && args+=(--prerelease)
+          if [ -n "$LINKS" ]; then
+            notes="## Preview build"$'\n\n'"Android, internal distribution, built from this commit on EAS:"$'\n'
+            while read -r link; do [ -n "$link" ] && notes+="- $link"$'\n'; done <<< "$LINKS"
+            args+=(--notes "$notes")  # gh puts them above the generated notes
+          fi
+          if [ -n "$ACT" ]; then
+            echo "act: would run gh release create $TAG ${args[*]}"
+          else
+            gh release create "$TAG" "${args[@]}"
+          fi

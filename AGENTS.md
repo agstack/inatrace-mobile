@@ -47,6 +47,8 @@ npx expo run:android         # native build on a device or emulator (or run:ios)
 - User-facing text goes through `locales/i18n.ts`; add the key to `en.json`, `de.json`,
   `es.json` and `rw.json` together.
 - The app version is in both `package.json` and `app.config.js`; change them together.
+  Releases are cut from that committed version (`RELEASE.md`): bump it in its own pull
+  request, never as part of a feature or fix.
 - The app ships through the stores, so old versions stay in use for a long time. A
   change must keep working with the backend currently deployed, or the PR must say
   which backend PR it needs.

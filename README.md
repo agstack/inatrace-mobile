@@ -108,7 +108,7 @@ signing certificates, credentials, or private tokens.
 
 ## Checks
 
-The same checks run in CI (`.github/workflows/ci.yml`) for every pull request and every push to `main`:
+The same checks run in CI (`.github/workflows/ci.yml`) for every pull request and every push to `main`, and again when a release is prepared (see [RELEASE.md](RELEASE.md)):
 
 ```bash
 npm run lint       # ESLint (Expo's universe/native rules with Prettier)
@@ -117,6 +117,12 @@ npm run test:ci    # Jest, single run (`npm test` watches)
 ```
 
 CI uses the Node version in `.nvmrc`.
+
+## Releases
+
+[RELEASE.md](RELEASE.md) describes how a release is cut: a pull request bumps the app version in
+`package.json` and `app.config.js`, the *Release: prepare* workflow checks it and drafts the
+GitHub Release, publishing the draft creates the tag and starts the production builds on EAS.
 
 ## Building the App with EAS Build
 
