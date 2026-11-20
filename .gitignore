@@ -57,3 +57,6 @@ ios/
 /.idea/codeStyles/Project.xml
 /.idea/inspectionProfiles/Project_Default.xml
 /.idea/vcs.xml
+
+# Python bytecode from the release script tests (.github/scripts)
+__pycache__/

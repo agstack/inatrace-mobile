@@ -26,3 +26,10 @@ describe('iOS bundle identifier configuration', () => {
     expect(appConfig({ config: {} }).expo.ios.bundleIdentifier).toBe('com.sunesis.inatracemobile');
   });
 });
+
+describe('app version', () => {
+  it('is the version in package.json, which a release must match (RELEASE.md)', () => {
+    const { version } = require('../package.json');
+    expect(appConfig({ config: {} }).expo.version).toBe(version);
+  });
+});

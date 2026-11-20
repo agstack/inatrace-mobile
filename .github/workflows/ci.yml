@@ -1,4 +1,5 @@
-# Checks for every pull request and every push to main: lint, type check, unit tests.
+# Phase 1 (pull request) and phase 2 (merge to main): lint, type check, unit tests.
+# See RELEASE.md.
 name: CI
 
 on:
@@ -7,7 +8,8 @@ on:
   push:
     branches: [main]
 
-# A newer push to a pull request supersedes its running checks.
+# A newer push to a pull request supersedes its running checks. Runs on main are never
+# cancelled.
 concurrency:
   group: ci-${{ github.ref }}
   cancel-in-progress: ${{ github.event_name == 'pull_request' }}
@@ -15,32 +17,6 @@ concurrency:
 permissions:
   contents: read
 
-# Explicit bash runs steps with -eo pipefail (the implicit default has no pipefail).
-defaults:
-  run:
-    shell: bash
-
 jobs:
   check:
-    name: Check
-    runs-on: ubuntu-26.04
-    timeout-minutes: 15
-    steps:
-      - uses: actions/checkout@v7
-
-      - uses: actions/setup-node@v7
-        with:
-          node-version-file: .nvmrc
-          cache: npm
-
-      - name: Install
-        run: npm ci --no-audit --no-fund
-
-      - name: Lint
-        run: npm run lint
-
-      - name: Type check
-        run: npm run typecheck
-
-      - name: Unit tests
-        run: npm run test:ci
+    uses: ./.github/workflows/_test.yml
