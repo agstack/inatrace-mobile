@@ -1,5 +1,5 @@
 import React from 'react';
-import { Text } from 'react-native';
+import { Alert, Text } from 'react-native';
 import renderer, { act } from 'react-test-renderer';
 import DataSync from '../app/(app)/data-sync';
 import { AuthContext } from '@/context/AuthContext';
@@ -26,6 +26,7 @@ jest.mock('@/components/common/Selector', () => () => null);
 
 global.IS_REACT_ACT_ENVIRONMENT = true;
 beforeEach(() => jest.clearAllMocks());
+afterEach(() => jest.restoreAllMocks());
 
 test('synchronizes only pending records read from the active context', async () => {
   const pendingB = { id: 'b-1', userId: '1', name: 'B farmer', surname: '', synced: false,
@@ -66,6 +67,85 @@ test('keeps the pending record when the request fails', async () => {
   expect(realm.realmDeleteOne).not.toHaveBeenCalled();
   await act(async () => tree.unmount());
   log.mockRestore();
+});
+
+test('marks a successful farmer and its plot when another farmer fails', async () => {
+  const okFarmer = { id: 'ok-1', userId: '1', name: 'OK', surname: '', synced: false,
+    data: JSON.stringify({ id: 'ok-1', name: 'OK', plots: [] }) };
+  const failFarmer = { id: 'fail-1', userId: '1', name: 'Fail', surname: '', synced: false,
+    data: JSON.stringify({ id: 'fail-1', name: 'Fail', plots: [] }) };
+  const okPlot = { id: 'plot-ok', farmerId: 'ok-1', userId: '1', synced: false,
+    data: JSON.stringify({ plotName: 'OK plot', crop: '1', size: '1 ha',
+      featureInfo: { geometry: { coordinates: [[[30.1, -1.9], [30.2, -1.9], [30.2, -2.0]]] } } }) };
+  const failPlot = { id: 'plot-fail', farmerId: 'fail-1', userId: '1', synced: false,
+    data: JSON.stringify({ plotName: 'Fail plot', crop: '1', size: '1 ha',
+      featureInfo: { geometry: { coordinates: [[[30.1, -1.9], [30.2, -1.9], [30.2, -2.0]]] } } }) };
+
+  realm.realmRead.mockImplementation(async schema => {
+    if (schema.name === 'Farmer') return [okFarmer, failFarmer];
+    if (schema.name === 'Plot') return [okPlot, failPlot];
+    return [];
+  });
+  const send = jest.fn()
+    .mockResolvedValueOnce({ data: { status: 'OK' } })
+    .mockRejectedValueOnce(new Error('500'));
+  const alert = jest.spyOn(Alert, 'alert').mockImplementation(() => {});
+  jest.spyOn(console, 'error').mockImplementation(() => {});
+
+  let tree;
+  try {
+    await act(async () => { tree = renderer.create(<AuthContext.Provider value={{
+      isConnected: true, makeRequest: send, selectedCompany: 2, user: { id: 1 },
+      guestAccess: false, instance: 'https://server-b.example', refreshFarmers: jest.fn(),
+    }}><DataSync /></AuthContext.Provider>); });
+    const sync = tree.root.findAll(node => typeof node.props?.onPress === 'function').find(p => p.findAllByType(Text)
+      .some(t => t.props.children === 'home.syncData'));
+
+    await act(async () => { await sync.props.onPress(); });
+
+    expect(send).toHaveBeenCalledTimes(2);
+    expect(realm.realmUpdate).toHaveBeenCalledWith(expect.anything(), 'ok-1', 'synced', true);
+    expect(realm.realmUpdate).not.toHaveBeenCalledWith(expect.anything(), 'fail-1', 'synced', true);
+    expect(realm.realmDeleteOne).toHaveBeenCalledWith(expect.anything(), "id == 'plot-ok'");
+    expect(realm.realmDeleteOne).not.toHaveBeenCalledWith(expect.anything(), "id == 'plot-fail'");
+    expect(alert).toHaveBeenCalledWith('synced.syncedTitle', 'server.syncError');
+  } finally {
+    if (tree) await act(async () => tree.unmount());
+  }
+});
+
+test('deletes the successful standalone plot when another plot fails', async () => {
+  const plotData = name => JSON.stringify({ plotName: name, crop: '1', size: '1 ha',
+    featureInfo: { geometry: { coordinates: [[[30.1, -1.9], [30.2, -1.9], [30.2, -2.0]]] } } });
+  const okPlot = { id: 'plot-ok', farmerId: 'farmer-1', userId: '1', synced: false, data: plotData('OK plot') };
+  const failPlot = { id: 'plot-fail', farmerId: 'farmer-1', userId: '1', synced: false, data: plotData('Fail plot') };
+
+  realm.realmRead.mockImplementation(async schema => schema.name === 'Plot' ? [okPlot, failPlot] : []);
+  const send = jest.fn()
+    .mockResolvedValueOnce({ data: { status: 'OK' } })
+    .mockRejectedValueOnce(new Error('500'));
+  const alert = jest.spyOn(Alert, 'alert').mockImplementation(() => {});
+  jest.spyOn(console, 'error').mockImplementation(() => {});
+
+  let tree;
+  try {
+    await act(async () => { tree = renderer.create(<AuthContext.Provider value={{
+      isConnected: true, makeRequest: send, selectedCompany: 2, user: { id: 1 },
+      guestAccess: false, instance: 'https://server-b.example', refreshFarmers: jest.fn(),
+    }}><DataSync /></AuthContext.Provider>); });
+    const sync = tree.root.findAll(node => typeof node.props?.onPress === 'function').find(p => p.findAllByType(Text)
+      .some(t => t.props.children === 'home.syncData'));
+
+    await act(async () => { await sync.props.onPress(); });
+
+    expect(send).toHaveBeenCalledTimes(2);
+    expect(realm.realmUpdate).not.toHaveBeenCalled();
+    expect(realm.realmDeleteOne).toHaveBeenCalledWith(expect.anything(), "id == 'plot-ok'");
+    expect(realm.realmDeleteOne).not.toHaveBeenCalledWith(expect.anything(), "id == 'plot-fail'");
+    expect(alert).toHaveBeenCalledWith('synced.syncedTitle', 'server.syncError');
+  } finally {
+    if (tree) await act(async () => tree.unmount());
+  }
 });
 
 test('sends active-context data to a local HTTP fixture', async () => {
