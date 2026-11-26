@@ -158,17 +158,23 @@ export default function DataSync() {
     let success = true;
 
     try {
-      let farmerPlots: any = [];
-      const farmerPromises = await farmersToSync.map(async (farmer: any) => {
-        const fp = plotsToSync.filter(
-          (plot: any) => plot.farmerId === farmer.id
-        );
+      const attachedPlotIds = new Set<string>();
+      for (const farmer of farmersToSync) {
+        for (const plot of plotsToSync) {
+          if (plot.farmerId === farmer.id) attachedPlotIds.add(plot.id);
+        }
+      }
 
-        const farmerBody = {
-          ...farmer.data,
-          id: null,
-          plots:
-            fp?.map((plot: any) => {
+      const syncFarmer = async (farmer: any): Promise<boolean> => {
+        try {
+          const farmerPlots = plotsToSync.filter(
+            (plot: any) => plot.farmerId === farmer.id
+          );
+
+          const farmerBody = {
+            ...farmer.data,
+            id: null,
+            plots: farmerPlots.map((plot: any) => {
               return {
                 plotName: plot.data.plotName,
                 crop: { id: parseInt(plot.data.crop, 10) },
@@ -193,83 +199,83 @@ export default function DataSync() {
                   }
                 ),
               };
-            }) ?? [],
-        };
+            }),
+          };
 
-        farmerPlots = [...farmerPlots, ...fp];
+          const result = await makeRequest({
+            url: `/api/company/userCustomers/add/${selectedCompany}`,
+            method: 'POST',
+            body: farmerBody,
+          });
+          assertContext();
 
-        return makeRequest({
-          url: `/api/company/userCustomers/add/${selectedCompany}`,
-          method: 'POST',
-          body: farmerBody,
-        }).then((result: any) => ({
-          result,
-          farmerId: farmer.id,
-          plotIds: fp.map((plot: any) => plot.id),
-        }));
-      });
+          if (result.data.status !== 'OK') return false;
 
-      const farmerPromiseResults = await Promise.all(farmerPromises);
-
-      for (const { result, farmerId, plotIds } of farmerPromiseResults) {
-        assertContext();
-        if (result.data.status === 'OK') {
-          await realm.realmUpdate(FarmerSchema, farmerId, 'synced', true);
-          for (const plotId of plotIds) {
+          await realm.realmUpdate(FarmerSchema, farmer.id, 'synced', true);
+          for (const plot of farmerPlots) {
             assertContext();
-            await realm.realmDeleteOne(PlotSchema, `id == '${plotId}'`);
+            await realm.realmDeleteOne(PlotSchema, `id == '${plot.id}'`);
           }
-        } else success = false;
-      }
+          return true;
+        } catch (error) {
+          console.error(error);
+          return false;
+        }
+      };
+
+      const farmerResults = await Promise.all(farmersToSync.map(syncFarmer));
+      if (farmerResults.some((synced: boolean) => !synced)) success = false;
 
       const plotsLeft = plotsToSync.filter(
-        (plot: any) => !farmerPlots.includes(plot)
+        (plot: any) => !attachedPlotIds.has(plot.id)
       );
 
-      const plotPromises = await plotsLeft.map(async (plot: any) => {
-        const plotBody = {
-          plotName: plot.data.plotName,
-          crop: { id: parseInt(plot.data.crop, 10) },
-          numberOfPlants: plot.data.numberOfPlants
-            ? parseInt(plot.data.numberOfPlants, 10)
-            : null,
-          unit: plot.data.size.split(' ')[1],
-          size: parseFloat(plot.data.size.split(' ')[0]),
-          geoId: '',
-          organicStartOfTransition: plot.data.organicStartOfTransition
-            ? plot.data.organicStartOfTransition
-            : null,
-          certification: plot.data.certification
-            ? plot.data.certification
-            : null,
-          coordinates: plot.data.featureInfo.geometry.coordinates[0].map(
-            (coordinate: number[]) => {
-              return {
-                latitude: coordinate[1],
-                longitude: coordinate[0],
-              };
-            }
-          ),
-        };
+      const syncPlot = async (plot: any): Promise<boolean> => {
+        try {
+          const plotBody = {
+            plotName: plot.data.plotName,
+            crop: { id: parseInt(plot.data.crop, 10) },
+            numberOfPlants: plot.data.numberOfPlants
+              ? parseInt(plot.data.numberOfPlants, 10)
+              : null,
+            unit: plot.data.size.split(' ')[1],
+            size: parseFloat(plot.data.size.split(' ')[0]),
+            geoId: '',
+            organicStartOfTransition: plot.data.organicStartOfTransition
+              ? plot.data.organicStartOfTransition
+              : null,
+            certification: plot.data.certification
+              ? plot.data.certification
+              : null,
+            coordinates: plot.data.featureInfo.geometry.coordinates[0].map(
+              (coordinate: number[]) => {
+                return {
+                  latitude: coordinate[1],
+                  longitude: coordinate[0],
+                };
+              }
+            ),
+          };
 
-        return makeRequest({
-          url: `/api/company/userCustomers/${plot.farmerId.toString()}/plots/add`,
-          method: 'POST',
-          body: plotBody,
-        }).then((result: any) => ({
-          result,
-          plotId: plot.id,
-        }));
-      });
+          const result = await makeRequest({
+            url: `/api/company/userCustomers/${plot.farmerId.toString()}/plots/add`,
+            method: 'POST',
+            body: plotBody,
+          });
+          assertContext();
 
-      const plotPromiseResults = await Promise.all(plotPromises);
+          if (result.data.status !== 'OK') return false;
 
-      for (const { result, plotId } of plotPromiseResults) {
-        assertContext();
-        if (result.data.status === 'OK') {
-          await realm.realmDeleteOne(PlotSchema, `id == '${plotId}'`);
-        } else success = false;
-      }
+          await realm.realmDeleteOne(PlotSchema, `id == '${plot.id}'`);
+          return true;
+        } catch (error) {
+          console.error(error);
+          return false;
+        }
+      };
+
+      const plotResults = await Promise.all(plotsLeft.map(syncPlot));
+      if (plotResults.some((synced: boolean) => !synced)) success = false;
     } catch (error) {
       success = false;
       console.error(error);
