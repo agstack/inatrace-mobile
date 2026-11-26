@@ -44,6 +44,7 @@ test('synchronizes only pending records read from the active context', async () 
   expect(send).toHaveBeenCalledTimes(1);
   expect(send.mock.calls[0][0].url).toBe('/api/company/userCustomers/add/2');
   expect(send.mock.calls[0][0].body.name).toBe('B farmer');
+  expect(send.mock.calls[0][0].headers).toEqual({ 'Idempotency-Key': 'b-1' });
   expect(realm.realmUpdate).toHaveBeenCalledWith(expect.anything(), 'b-1', 'synced', true);
   await act(async () => tree.unmount());
 });

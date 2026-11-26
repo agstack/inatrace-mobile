@@ -206,6 +206,9 @@ export default function DataSync() {
             url: `/api/company/userCustomers/add/${selectedCompany}`,
             method: 'POST',
             body: farmerBody,
+            headers: {
+              'Idempotency-Key': farmer.id,
+            },
           });
           assertContext();
 
